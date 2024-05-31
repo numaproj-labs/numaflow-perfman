@@ -118,7 +118,7 @@ func UninstallRelease(releaseName string, namespace string, log *zap.Logger) err
 	// Check if release exists
 	getStatus := action.NewGet(actionConfig)
 	if _, err := getStatus.Run(releaseName); err != nil {
-		log.Error("release does not exist", zap.String("release-name", releaseName))
+		log.Warn("release does not exist, it might already be un-installed", zap.String("release-name", releaseName))
 		return nil
 	}
 
