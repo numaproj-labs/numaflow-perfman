@@ -45,18 +45,12 @@ func getChart(chartPathOption action.ChartPathOptions, chartName string, setting
 }
 
 func createNamespace(kubeClient *kubernetes.Clientset, namespace string, nso *v1.Namespace, log *zap.Logger) error {
-	_, err := kubeClient.CoreV1().Namespaces().Get(context.TODO(), namespace, metav1.GetOptions{})
-	if err == nil {
+	_, err := kubeClient.CoreV1().Namespaces().Create(context.TODO(), nso, metav1.CreateOptions{})
+	if kerrors.IsAlreadyExists(err) {
 		log.Info("namespace already exists", zap.String("namespace", namespace))
 		return nil
-	}
-
-	if !kerrors.IsNotFound(err) {
-		return fmt.Errorf("failed to get namespace %s: %w", namespace, err)
-	}
-
-	if _, err := kubeClient.CoreV1().Namespaces().Create(context.TODO(), nso, metav1.CreateOptions{}); err != nil {
-		return fmt.Errorf("failed to create namespace %s: %w", namespace, err)
+	} else if err != nil {
+		return fmt.Errorf("failed to create namespace: %w", err)
 	}
 
 	return nil
@@ -129,13 +123,9 @@ func UninstallRelease(releaseName string, namespace string, log *zap.Logger) err
 	}
 
 	uninstall := action.NewUninstall(actionConfig)
-	resp, err := uninstall.Run(releaseName)
+	_, err := uninstall.Run(releaseName)
 	if err != nil {
 		return fmt.Errorf("failed to uninstall release: %s: %w", releaseName, err)
-	}
-
-	if resp != nil && resp.Info != "" {
-		log.Info("uninstalled chart successfully", zap.String("release-name", resp.Release.Name), zap.String("info", resp.Info))
 	}
 
 	return nil

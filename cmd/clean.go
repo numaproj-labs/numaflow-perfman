@@ -25,18 +25,16 @@ var cleanCmd = &cobra.Command{
 			return fmt.Errorf("failed to delete Grafana: %w", err)
 		}
 
-		// Delete pipeline metrics service monitors
-		if err := util.DeleteResourcesWithLabel(dynamicClient, svGvr, util.PerfmanNamespace, "app.kubernetes.io/instance", "perfman-numaflow-pipeline-metrics", log); err != nil {
+		labels := map[string]string{
+			"app.kubernetes.io/part-of": "perfman",
+		}
+		// Delete metrics service monitors
+		if err := util.DeleteResourcesWithLabel(dynamicClient, svGvr, util.PerfmanNamespace, labels, log); err != nil {
 			return fmt.Errorf("failed to delete metrics service monitors: %w", err)
 		}
 
-		// Delete jetstream metrics service monitors
-		if err := util.DeleteResourcesWithLabel(dynamicClient, svGvr, util.PerfmanNamespace, "app.kubernetes.io/instance", "perfman-numaflow-isbsvc-jetstream-metrics", log); err != nil {
-			return fmt.Errorf("failed to delete jetstream metrics service monitor: %w", err)
-		}
-
 		// Delete pipeline
-		if err := util.DeleteResourcesWithLabel(dynamicClient, pipelineGvr, util.PerfmanNamespace, "app.kubernetes.io/instance", "perfman-base-pipeline", log); err != nil {
+		if err := util.DeleteResourcesWithLabel(dynamicClient, pipelineGvr, util.PerfmanNamespace, labels, log); err != nil {
 			return fmt.Errorf("failed to delete base pipeline: %w", err)
 		}
 

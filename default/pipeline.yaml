@@ -2,7 +2,7 @@ apiVersion: numaflow.numaproj.io/v1alpha1
 kind: Pipeline
 metadata:
   labels:
-    app.kubernetes.io/instance: perfman-base-pipeline
+    app.kubernetes.io/part-of: perfman
   name: perfman-base-pipeline
 spec:
   vertices:

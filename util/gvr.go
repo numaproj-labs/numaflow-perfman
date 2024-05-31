@@ -9,6 +9,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	apimachinery "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"sigs.k8s.io/yaml"
@@ -34,17 +35,11 @@ func CreateResource(filename string, dynamicClient *dynamic.DynamicClient, gvr s
 		return fmt.Errorf("failed to retrieve configuration information: %w", err)
 	}
 
-	// Check if resource already exists
-	existing, err := dynamicClient.Resource(gvr).Namespace(namespace).Get(context.TODO(), obj.GetName(), metav1.GetOptions{})
-	if err == nil {
-		log.Info("Resource already exists, skipping creation", zap.String("resource-name", existing.GetName()))
-		return nil
-	} else if !errors.IsNotFound(err) {
-		return fmt.Errorf("failed to check if resource exists: %w", err)
-	}
-
 	result, err := dynamicClient.Resource(gvr).Namespace(namespace).Create(context.TODO(), obj, metav1.CreateOptions{})
-	if err != nil {
+	if errors.IsAlreadyExists(err) {
+		log.Info("Resource already exists, skipping creation", zap.String("resource-name", obj.GetName()))
+		return nil
+	} else if err != nil {
 		return fmt.Errorf("failed to create resource: %w", err)
 	}
 
@@ -52,10 +47,13 @@ func CreateResource(filename string, dynamicClient *dynamic.DynamicClient, gvr s
 	return nil
 }
 
-func DeleteResourcesWithLabel(dynamicClient *dynamic.DynamicClient, gvr schema.GroupVersionResource, namespace string, labelKey string, labelVal string, log *zap.Logger) error {
-	labelSelector := labelKey + "=" + labelVal
+func DeleteResourcesWithLabel(dynamicClient *dynamic.DynamicClient, gvr schema.GroupVersionResource, namespace string, labels map[string]string, log *zap.Logger) error {
+	selector, err := apimachinery.Parse(apimachinery.FormatLabels(labels))
+	if err != nil {
+		return fmt.Errorf("could not parse labels: %w", err)
+	}
 
-	resources, err := dynamicClient.Resource(gvr).Namespace(namespace).List(context.TODO(), metav1.ListOptions{LabelSelector: labelSelector})
+	resources, err := dynamicClient.Resource(gvr).Namespace(namespace).List(context.TODO(), metav1.ListOptions{LabelSelector: selector.String()})
 	if err != nil {
 		return fmt.Errorf("could not list resources: %w", err)
 	}

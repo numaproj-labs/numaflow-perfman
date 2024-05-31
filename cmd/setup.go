@@ -19,6 +19,12 @@ var svGvr = schema.GroupVersionResource{
 	Resource: "servicemonitors",
 }
 
+var isbGvr = schema.GroupVersionResource{
+	Group:    "numaflow.numaproj.io",
+	Version:  "v1alpha1",
+	Resource: "interstepbufferservices",
+}
+
 // setupCmd represents the setup command
 var setupCmd = &cobra.Command{
 	Use:   "setup",
@@ -49,11 +55,6 @@ var setupCmd = &cobra.Command{
 
 		// Optionally install ISB service
 		if cmd.Flag("jetstream").Changed {
-			isbGvr := schema.GroupVersionResource{
-				Group:    "numaflow.numaproj.io",
-				Version:  "v1alpha1",
-				Resource: "interstepbufferservices",
-			}
 			if err := util.CreateResource("default/isbvc.yaml", dynamicClient, isbGvr, util.PerfmanNamespace, log); err != nil {
 				return fmt.Errorf("failed to create jetsream-isbvc: %w", err)
 			}
