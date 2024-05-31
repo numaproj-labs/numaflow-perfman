@@ -1,7 +1,9 @@
 apiVersion: numaflow.numaproj.io/v1alpha1
 kind: Pipeline
 metadata:
-  name: simple-pipeline
+  labels:
+    app.kubernetes.io/part-of: perfman
+  name: perfman-base-pipeline
 spec:
   vertices:
     - name: input

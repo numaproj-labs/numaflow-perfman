@@ -1,4 +1,4 @@
-package setup
+package util
 
 import (
 	"context"
@@ -27,6 +27,9 @@ type ChartRelease struct {
 	Values      map[string]interface{}
 }
 
+var settings = cli.New()
+var actionConfig = new(action.Configuration)
+
 func getChart(chartPathOption action.ChartPathOptions, chartName string, settings *cli.EnvSettings) (*chart.Chart, error) {
 	chartPath, err := chartPathOption.LocateChart(chartName, settings)
 	if err != nil {
@@ -42,18 +45,12 @@ func getChart(chartPathOption action.ChartPathOptions, chartName string, setting
 }
 
 func createNamespace(kubeClient *kubernetes.Clientset, namespace string, nso *v1.Namespace, log *zap.Logger) error {
-	_, err := kubeClient.CoreV1().Namespaces().Get(context.TODO(), namespace, metav1.GetOptions{})
-	if err == nil {
+	_, err := kubeClient.CoreV1().Namespaces().Create(context.TODO(), nso, metav1.CreateOptions{})
+	if kerrors.IsAlreadyExists(err) {
 		log.Info("namespace already exists", zap.String("namespace", namespace))
 		return nil
-	}
-
-	if !kerrors.IsNotFound(err) {
-		return fmt.Errorf("failed to get namespace %s: %w", namespace, err)
-	}
-
-	if _, err := kubeClient.CoreV1().Namespaces().Create(context.TODO(), nso, metav1.CreateOptions{}); err != nil {
-		return fmt.Errorf("failed to create namespace %s: %w", namespace, err)
+	} else if err != nil {
+		return fmt.Errorf("failed to create namespace: %w", err)
 	}
 
 	return nil
@@ -70,8 +67,6 @@ func (cr *ChartRelease) InstallOrUpgradeRelease(kubeClient *kubernetes.Clientset
 		return err
 	}
 
-	settings := cli.New()
-	actionConfig := new(action.Configuration)
 	if err := actionConfig.Init(settings.RESTClientGetter(), cr.Namespace, os.Getenv("HELM_DRIVER"), logger.Printf); err != nil {
 		return fmt.Errorf("failed to initialize actionConfig: %w", err)
 	}
@@ -110,6 +105,27 @@ func (cr *ChartRelease) InstallOrUpgradeRelease(kubeClient *kubernetes.Clientset
 		}
 
 		log.Info("updated chart successfully", zap.String("release-name", rel.Name), zap.String("release-namespace", rel.Namespace))
+	}
+
+	return nil
+}
+
+func UninstallRelease(releaseName string, namespace string, log *zap.Logger) error {
+	if err := actionConfig.Init(settings.RESTClientGetter(), namespace, os.Getenv("HELM_DRIVER"), logger.Printf); err != nil {
+		return fmt.Errorf("failed to initialize actionConfig: %w", err)
+	}
+
+	// Check if release exists
+	getStatus := action.NewGet(actionConfig)
+	if _, err := getStatus.Run(releaseName); err != nil {
+		log.Warn("release does not exist, it might already be un-installed", zap.String("release-name", releaseName))
+		return nil
+	}
+
+	uninstall := action.NewUninstall(actionConfig)
+	_, err := uninstall.Run(releaseName)
+	if err != nil {
+		return fmt.Errorf("failed to uninstall release: %s: %w", releaseName, err)
 	}
 
 	return nil

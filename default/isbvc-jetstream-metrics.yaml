@@ -2,8 +2,8 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   labels:
-    app.kubernetes.io/part-of: numaflow
-  name: numaflow-isbsvc-jetstream-metrics
+    app.kubernetes.io/part-of: perfman
+  name: perfman-numaflow-isbsvc-jetstream-metrics
 spec:
   endpoints:
     - scheme: http
