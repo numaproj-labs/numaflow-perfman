@@ -1,4 +1,4 @@
-package setup
+package util
 
 import (
 	"context"
@@ -26,6 +26,9 @@ type ChartRelease struct {
 	Namespace   string
 	Values      map[string]interface{}
 }
+
+var settings = cli.New()
+var actionConfig = new(action.Configuration)
 
 func getChart(chartPathOption action.ChartPathOptions, chartName string, settings *cli.EnvSettings) (*chart.Chart, error) {
 	chartPath, err := chartPathOption.LocateChart(chartName, settings)
@@ -70,8 +73,6 @@ func (cr *ChartRelease) InstallOrUpgradeRelease(kubeClient *kubernetes.Clientset
 		return err
 	}
 
-	settings := cli.New()
-	actionConfig := new(action.Configuration)
 	if err := actionConfig.Init(settings.RESTClientGetter(), cr.Namespace, os.Getenv("HELM_DRIVER"), logger.Printf); err != nil {
 		return fmt.Errorf("failed to initialize actionConfig: %w", err)
 	}
@@ -110,6 +111,31 @@ func (cr *ChartRelease) InstallOrUpgradeRelease(kubeClient *kubernetes.Clientset
 		}
 
 		log.Info("updated chart successfully", zap.String("release-name", rel.Name), zap.String("release-namespace", rel.Namespace))
+	}
+
+	return nil
+}
+
+func UninstallRelease(releaseName string, namespace string, log *zap.Logger) error {
+	if err := actionConfig.Init(settings.RESTClientGetter(), namespace, os.Getenv("HELM_DRIVER"), logger.Printf); err != nil {
+		return fmt.Errorf("failed to initialize actionConfig: %w", err)
+	}
+
+	// Check if release exists
+	getStatus := action.NewGet(actionConfig)
+	if _, err := getStatus.Run(releaseName); err != nil {
+		log.Error("release does not exist", zap.String("release-name", releaseName))
+		return nil
+	}
+
+	uninstall := action.NewUninstall(actionConfig)
+	resp, err := uninstall.Run(releaseName)
+	if err != nil {
+		return fmt.Errorf("failed to uninstall release: %s: %w", releaseName, err)
+	}
+
+	if resp != nil && resp.Info != "" {
+		log.Info("uninstalled chart successfully", zap.String("release-name", resp.Release.Name), zap.String("info", resp.Info))
 	}
 
 	return nil

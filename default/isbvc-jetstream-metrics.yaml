@@ -3,7 +3,8 @@ kind: ServiceMonitor
 metadata:
   labels:
     app.kubernetes.io/part-of: numaflow
-  name: numaflow-isbsvc-jetstream-metrics
+    app.kubernetes.io/instance: perfman-numaflow-isbsvc-jetstream-metrics
+  name: perfman-numaflow-isbsvc-jetstream-metrics
 spec:
   endpoints:
     - scheme: http

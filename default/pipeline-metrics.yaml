@@ -3,7 +3,8 @@ kind: ServiceMonitor
 metadata:
   labels:
     app.kubernetes.io/part-of: numaflow
-  name: numaflow-pipeline-metrics
+    app.kubernetes.io/instance: perfman-numaflow-pipeline-metrics
+  name: perfman-numaflow-pipeline-metrics
 spec:
   endpoints:
     - scheme: https

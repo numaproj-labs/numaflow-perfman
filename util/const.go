@@ -10,5 +10,9 @@ const (
 	PrometheusPFServiceName = "perfman-kube-prometheus-prometheus"
 	GrafanaPFServiceName    = "perfman-grafana"
 
+	// Chart release names
+	GrafanaReleaseName    = "perfman-grafana"
+	PrometheusReleaseName = "perfman-kube-prometheus"
+
 	GrafanaPassword = "admin"
 )

@@ -5,13 +5,19 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"github.com/numaproj-labs/numaflow-perfman/setup"
 	"github.com/numaproj-labs/numaflow-perfman/util"
 )
 
 var Numaflow bool
 var Jetstream bool
+
+var svGvr = schema.GroupVersionResource{
+	Group:    "monitoring.coreos.com",
+	Version:  "v1",
+	Resource: "servicemonitors",
+}
 
 // setupCmd represents the setup command
 var setupCmd = &cobra.Command{
@@ -29,7 +35,7 @@ var setupCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Optionally install numaflow
 		if cmd.Flag("numaflow").Changed {
-			numaflowChart := setup.ChartRelease{
+			numaflowChart := util.ChartRelease{
 				ChartName:   "numaflow",
 				ReleaseName: "perfman-numaflow",
 				RepoUrl:     "https://numaproj.io/helm-charts",
@@ -43,21 +49,20 @@ var setupCmd = &cobra.Command{
 
 		// Optionally install ISB service
 		if cmd.Flag("jetstream").Changed {
-			isbGvro := util.GVRObject{
-				Group:     "numaflow.numaproj.io",
-				Version:   "v1alpha1",
-				Resource:  "interstepbufferservices",
-				Namespace: util.PerfmanNamespace,
+			isbGvr := schema.GroupVersionResource{
+				Group:    "numaflow.numaproj.io",
+				Version:  "v1alpha1",
+				Resource: "interstepbufferservices",
 			}
-			if err := isbGvro.CreateResource("default/isbvc.yaml", dynamicClient, log); err != nil {
+			if err := util.CreateResource("default/isbvc.yaml", dynamicClient, isbGvr, util.PerfmanNamespace, log); err != nil {
 				return fmt.Errorf("failed to create jetsream-isbvc: %w", err)
 			}
 		}
 
-		// Install prometheus operator
-		kubePrometheusChart := setup.ChartRelease{
+		// Install Prometheus Operator
+		kubePrometheusChart := util.ChartRelease{
 			ChartName:   "kube-prometheus",
-			ReleaseName: "perfman-kube-prometheus",
+			ReleaseName: util.PrometheusReleaseName,
 			RepoUrl:     "https://charts.bitnami.com/bitnami",
 			Namespace:   util.PerfmanNamespace,
 			Values:      nil,
@@ -68,9 +73,9 @@ var setupCmd = &cobra.Command{
 
 		// Install Grafana
 		// TODO: figure out how to sync k8s secret with updated password
-		grafanaChart := setup.ChartRelease{
+		grafanaChart := util.ChartRelease{
 			ChartName:   "grafana",
-			ReleaseName: "perfman-grafana",
+			ReleaseName: util.GrafanaReleaseName,
 			RepoUrl:     "https://grafana.github.io/helm-charts",
 			Namespace:   util.PerfmanNamespace,
 			Values: map[string]interface{}{
@@ -81,19 +86,12 @@ var setupCmd = &cobra.Command{
 			return fmt.Errorf("unable to install grafana: %w", err)
 		}
 
-		// Install service monitors
-		svGvro := util.GVRObject{
-			Group:     "monitoring.coreos.com",
-			Version:   "v1",
-			Resource:  "servicemonitors",
-			Namespace: util.PerfmanNamespace,
-		}
-
-		if err := svGvro.CreateResource("default/pipeline-metrics.yaml", dynamicClient, log); err != nil {
+		// Install metrics service monitors
+		if err := util.CreateResource("default/pipeline-metrics.yaml", dynamicClient, svGvr, util.PerfmanNamespace, log); err != nil {
 			return fmt.Errorf("failed to create service monitor for pipeline metrics: %w", err)
 		}
 
-		if err := svGvro.CreateResource("default/isbvc-jetstream-metrics.yaml", dynamicClient, log); err != nil {
+		if err := util.CreateResource("default/isbvc-jetstream-metrics.yaml", dynamicClient, svGvr, util.PerfmanNamespace, log); err != nil {
 			return fmt.Errorf("failed to create service monitor for jetstream metrics: %w", err)
 		}
 

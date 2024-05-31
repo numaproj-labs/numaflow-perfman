@@ -4,9 +4,16 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/numaproj-labs/numaflow-perfman/util"
 )
+
+var pipelineGvr = schema.GroupVersionResource{
+	Group:    "numaflow.numaproj.io",
+	Version:  "v1alpha1",
+	Resource: "pipelines",
+}
 
 // pipelineCmd represents the pipeline command
 var pipelineCmd = &cobra.Command{
@@ -14,14 +21,7 @@ var pipelineCmd = &cobra.Command{
 	Short: "Apply the base numaflow pipeline",
 	Long:  "Apply the base numaflow pipeline",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		pipelineGvro := util.GVRObject{
-			Group:     "numaflow.numaproj.io",
-			Version:   "v1alpha1",
-			Resource:  "pipelines",
-			Namespace: util.PerfmanNamespace,
-		}
-
-		if err := pipelineGvro.CreateResource("default/pipeline.yaml", dynamicClient, log); err != nil {
+		if err := util.CreateResource("default/pipeline.yaml", dynamicClient, pipelineGvr, util.PerfmanNamespace, log); err != nil {
 			return fmt.Errorf("failed to apply base pipeline: %w", err)
 		}
 
