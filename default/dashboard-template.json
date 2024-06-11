@@ -967,8 +967,8 @@
         {
           "current": {
             "selected": false,
-            "text": "simple-pipeline",
-            "value": "simple-pipeline"
+            "text": "perfman-base-pipeline",
+            "value": "perfman-base-pipeline"
           },
           "datasource": {
             "type": "prometheus",

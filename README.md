@@ -14,4 +14,4 @@ After creating the perfman executable with `make build`:
 3. Start a pipeline: `./perfman pipeline`. Allow the pipeline to gather metrics for at least 5 minutes
 4. Run the report script: `./report-poc.sh`. This will output prometheus data as well as a report under the `test/` folder
 5. If you would like to visualize your metrics as continuous time series data. First login
-to Grafana at `localhost:3000`, then run `./perfman snapshot` and follow the URL
+to Grafana at `localhost:3000`, then run `./perfman report` and follow the URL
