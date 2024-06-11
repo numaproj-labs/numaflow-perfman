@@ -1,0 +1,13 @@
+INBOUND MESSAGES (TPS) METRICS OVER 5 minutes
+---------------------------------------------
+Vertex          Average no. of messages (per second)
+p1              5.0000
+input           5.0000
+output          4.9920
+
+FORWARDER E2E LATENCY METRICS (P90) OVER 5 minutes
+--------------------------------------------------
+VERTEX          Average batch processing time (seconds)
+p1              3.5091
+input           4.8030
+output          0.1526
