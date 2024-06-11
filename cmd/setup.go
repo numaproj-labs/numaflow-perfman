@@ -10,9 +10,11 @@ import (
 	"github.com/numaproj-labs/numaflow-perfman/util"
 )
 
-var Numaflow bool
-var Jetstream bool
-var Grafana bool
+var (
+	Numaflow  bool
+	Jetstream bool
+	Grafana   bool
+)
 
 var svGvr = schema.GroupVersionResource{
 	Group:    "monitoring.coreos.com",

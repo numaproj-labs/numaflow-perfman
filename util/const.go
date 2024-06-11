@@ -15,4 +15,6 @@ const (
 	PrometheusReleaseName = "perfman-kube-prometheus"
 
 	GrafanaPassword = "admin"
+	GrafanaURL      = "http://localhost:3000"
+	PrometheusURL   = "http://localhost:9090"
 )

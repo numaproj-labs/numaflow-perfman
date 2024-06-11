@@ -17,7 +17,7 @@ var snapshotCmd = &cobra.Command{
 	Long:  "Generate a url to access the snapshot of the reporting dashboard in Grafana",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// TODO: can all be moved to viper configuration
-		grafanaURL := "http://localhost:3000"
+		grafanaURL := util.GrafanaURL
 		filePath := "default/dashboard-template.json" // the path to default dashboard template file.
 		username := "admin"
 		password := util.GrafanaPassword
