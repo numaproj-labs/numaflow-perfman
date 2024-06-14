@@ -1,15 +1,12 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
-	"slices"
-	"time"
 
 	"github.com/prometheus/client_golang/api"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
-	"github.com/prometheus/common/model"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 
 	"github.com/numaproj-labs/numaflow-perfman/collect"
 	"github.com/numaproj-labs/numaflow-perfman/util"
@@ -17,14 +14,21 @@ import (
 
 var (
 	Name    string
-	Period  int
+	Last    int
 	Metrics []string
 )
 
-var validMetrics = []string{"latency", "tps"}
-
-// RateInterval is used to determine over what period the rate function is computed
-const RateInterval = collect.DefaultStep * 4
+var validMetrics []string
+var metrics = map[string][]collect.MetricObject{
+	"data-forward": {
+		collect.InboundMessages,
+	},
+	"latency": {
+		collect.ForwarderE2EP90,
+		collect.ForwarderE2EP95,
+		collect.ForwarderE2EP99,
+	},
+}
 
 // collectCmd represents the collect command
 var collectCmd = &cobra.Command{
@@ -32,14 +36,16 @@ var collectCmd = &cobra.Command{
 	Short: "Collect Prometheus data",
 	Long:  "Collect Prometheus metrics from a running pipeline, for a given time range",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if Period <= 0 {
+		if Last <= 0 {
 			return fmt.Errorf("value provided to period flag must be greater than 0")
 		}
 
-		// Check that the metrics provided are valid
-		for _, metric := range Metrics {
-			if !slices.Contains(validMetrics, metric) {
-				return fmt.Errorf("invalid metric: %s. Valid metrics are: %v", metric, validMetrics)
+		if cmd.Flags().Changed("metrics") {
+			// Check that the provided metrics are valid
+			for _, metric := range Metrics {
+				if _, ok := metrics[metric]; !ok {
+					return fmt.Errorf("invalid metric: %s, valid metrics are: %v", metric, validMetrics)
+				}
 			}
 		}
 
@@ -49,31 +55,14 @@ var collectCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("error creating client: %w", err)
 		}
-
 		v1api := v1.NewAPI(client)
 
-		queryRange := v1.Range{
-			Start: time.Now().Add(-5 * time.Minute),
-			End:   time.Now(),
-			Step:  collect.DefaultStep,
-		}
-
-		result, _, err := v1api.QueryRange(context.TODO(), "rate(forwarder_read_total[1m])", queryRange)
-		if err != nil {
-			return fmt.Errorf("error querying Prometheus: %w", err)
-		}
-
-		matrix := result.(model.Matrix)
-		for _, v := range matrix {
-			fmt.Printf("%v =>\n", v.Metric)
-			for _, val := range v.Values {
-				fmt.Printf("%v, %v\n", val.Value, val.Timestamp)
+		for _, metric := range Metrics {
+			metricObjects := metrics[metric]
+			if err := collect.ProcessMetrics(v1api, metricObjects, Last, log); err != nil {
+				return fmt.Errorf("failed to process metrics over the last %d minutes: %w", Last, err)
 			}
 		}
-
-		minutes := int(RateInterval / time.Minute)
-		seconds := int((RateInterval % time.Minute) / time.Second)
-		fmt.Printf("%dm%ds\n", minutes, seconds)
 
 		return nil
 	},
@@ -82,9 +71,18 @@ var collectCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(collectCmd)
 
-	collectCmd.Flags().StringVarP(&Name, "name", "n", "", "Specify the name of the folder under which you would like to output the Prometheus data files")
-	collectCmd.Flags().IntVarP(&Period, "period", "p", 0, "Specify the time period for which you want to collect Prometheus data")
-	collectCmd.Flags().StringSliceVarP(&Metrics, "metrics", "m", validMetrics, "Specify the metrics you would like to collect data for")
-	collectCmd.MarkFlagRequired("period")
-	collectCmd.MarkFlagRequired("name")
+	for m := range metrics {
+		validMetrics = append(validMetrics, m)
+	}
+	collectCmd.Flags().StringVarP(&Name, "name", "n", "", "Specify the name of the folder to output the Prometheus data files")
+	collectCmd.Flags().IntVarP(&Last, "last", "l", 0, "Specify how many minutes to go back starting from the current time")
+	collectCmd.Flags().StringSliceVarP(&Metrics, "metrics", "m", validMetrics, "Specify the metrics to collect Prometheus data for")
+	if err := collectCmd.MarkFlagRequired("last"); err != nil {
+		log.Fatal("Failed to mark period flag as required", zap.Error(err))
+	}
+	if err := collectCmd.MarkFlagRequired("name"); err != nil {
+		log.Fatal("Failed to mark name flag as required", zap.Error(err))
+	}
+
+	// TODO: Add start and end flags to specify specific start and end times
 }

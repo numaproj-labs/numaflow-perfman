@@ -1,20 +1,23 @@
 package util
 
-// TODO: use viper for configuration management, especially for password
+import "time"
+
+// TODO: use viper for configuration management
 const (
-	// Namespaces
+	// Namespace config
 	PerfmanNamespace  = "default"
 	NumaflowNamespace = "numaflow-system"
 
-	// Service names to use for port forwarding
-	PrometheusPFServiceName = "perfman-kube-prometheus-prometheus"
-	GrafanaPFServiceName    = "perfman-grafana"
+	// Grafana and Prometheus config
+	GrafanaPassword         = "admin"
+	GrafanaURL              = "http://localhost:3000"
+	PrometheusURL           = "http://localhost:9090"
+	GrafanaReleaseName      = "perfman-grafana"
+	PrometheusReleaseName   = "perfman-kube-prometheus"
+	PrometheusPFServiceName = "perfman-kube-prometheus-prometheus" // Prometheus service name to use for port forwarding
+	GrafanaPFServiceName    = "perfman-grafana"                    // Grafana service name to use for port forwarding
 
-	// Chart release names
-	GrafanaReleaseName    = "perfman-grafana"
-	PrometheusReleaseName = "perfman-kube-prometheus"
-
-	GrafanaPassword = "admin"
-	GrafanaURL      = "http://localhost:3000"
-	PrometheusURL   = "http://localhost:9090"
+	// Promethues HTTP API config
+	Step         = 15 * time.Second // defines how often a new value is produced
+	RateInterval = Step * 4         // used to determine over what period the rate function is computed
 )

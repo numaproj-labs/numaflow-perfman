@@ -1,8 +1,10 @@
 package collect
 
-import "time"
+import (
+	"time"
 
-const DefaultStep = 15 * time.Second
+	"github.com/numaproj-labs/numaflow-perfman/util"
+)
 
 type Options struct {
 	step time.Duration
@@ -15,13 +17,13 @@ func (o *Options) Step() time.Duration {
 // DefaultOptions returns the default options.
 func DefaultOptions() *Options {
 	return &Options{
-		step: DefaultStep,
+		step: util.Step,
 	}
 }
 
 type Option func(*Options)
 
-// WithStep sets the increment between each point in the range. It defines how often a new value is produced
+// WithStep sets the increment between each point in the range
 func WithStep(step time.Duration) Option {
 	return func(opts *Options) {
 		opts.step = step
