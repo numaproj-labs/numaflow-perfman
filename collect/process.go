@@ -11,13 +11,13 @@ import (
 	"go.uber.org/zap"
 )
 
-func createDumpFilePath(reportDir string, metric string, filename string, timePeriod int) (*os.File, error) {
-	err := os.MkdirAll(fmt.Sprintf("output/%s/%s", reportDir, metric), os.ModePerm)
+func createDumpFilePath(dataDir string, metric string, filename string, timePeriod int) (*os.File, error) {
+	err := os.MkdirAll(fmt.Sprintf("output/%s/%s", dataDir, metric), os.ModePerm)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create report directory: %w", err)
+		return nil, fmt.Errorf("failed to create data directory: %w", err)
 	}
 
-	f, err := os.Create(fmt.Sprintf("output/%s/%s/%s-%dmin.csv", reportDir, metric, filename, timePeriod))
+	f, err := os.Create(fmt.Sprintf("output/%s/%s/%s-%dmin.csv", dataDir, metric, filename, timePeriod))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create dump file: %w", err)
 	}
@@ -26,7 +26,7 @@ func createDumpFilePath(reportDir string, metric string, filename string, timePe
 }
 
 // ProcessMetrics queries the Prometheus API with the given metric object and outputs the returned data into csv files
-func ProcessMetrics(prometheusAPI v1.API, metric string, metricObjects []MetricObject, reportDir string, timePeriod int, log *zap.Logger, inputOptions ...Option) error {
+func ProcessMetrics(prometheusAPI v1.API, metric string, metricObjects []MetricObject, dataDir string, timePeriod int, log *zap.Logger, inputOptions ...Option) error {
 	opts := DefaultOptions()
 
 	for _, inputOption := range inputOptions {
@@ -40,9 +40,9 @@ func ProcessMetrics(prometheusAPI v1.API, metric string, metricObjects []MetricO
 	}
 
 	for _, obj := range metricObjects {
-		dumpFile, err := createDumpFilePath(reportDir, metric, obj.Filename, timePeriod)
+		dumpFile, err := createDumpFilePath(dataDir, metric, obj.Filename, timePeriod)
 		if err != nil {
-			return fmt.Errorf("error creating data dump path: %w", err)
+			return fmt.Errorf("error creating dump file path: %w", err)
 		}
 		defer dumpFile.Close()
 
