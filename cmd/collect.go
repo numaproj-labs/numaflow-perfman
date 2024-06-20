@@ -19,7 +19,7 @@ var (
 )
 
 var validMetrics []string
-var metrics = map[string][]collect.MetricObject{
+var metricsMatrix = map[string][]collect.MetricObject{
 	"data-forward": {
 		collect.InboundMessages,
 	},
@@ -43,7 +43,7 @@ var collectCmd = &cobra.Command{
 		if cmd.Flags().Changed("metrics") {
 			// Check that the provided metrics are valid
 			for _, metric := range Metrics {
-				if _, ok := metrics[metric]; !ok {
+				if _, ok := metricsMatrix[metric]; !ok {
 					return fmt.Errorf("invalid metric: %s, valid metrics are: %v", metric, validMetrics)
 				}
 			}
@@ -58,8 +58,8 @@ var collectCmd = &cobra.Command{
 		v1api := v1.NewAPI(client)
 
 		for _, metric := range Metrics {
-			metricObjects := metrics[metric]
-			if err := collect.ProcessMetrics(v1api, metricObjects, Last, log); err != nil {
+			metricObjects := metricsMatrix[metric]
+			if err := collect.ProcessMetrics(v1api, metric, metricObjects, Name, Last, log); err != nil {
 				return fmt.Errorf("failed to process metrics over the last %d minutes: %w", Last, err)
 			}
 		}
@@ -71,7 +71,7 @@ var collectCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(collectCmd)
 
-	for m := range metrics {
+	for m := range metricsMatrix {
 		validMetrics = append(validMetrics, m)
 	}
 	collectCmd.Flags().StringVarP(&Name, "name", "n", "", "Specify the name of the folder to output the Prometheus data files")
