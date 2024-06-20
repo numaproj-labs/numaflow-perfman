@@ -25,6 +25,7 @@ func createDumpFilePath(reportDir string, metric string, filename string, timePe
 	return f, nil
 }
 
+// ProcessMetrics queries the Prometheus API with the given metric object and outputs the returned data into csv files
 func ProcessMetrics(prometheusAPI v1.API, metric string, metricObjects []MetricObject, reportDir string, timePeriod int, log *zap.Logger, inputOptions ...Option) error {
 	opts := DefaultOptions()
 
@@ -45,7 +46,7 @@ func ProcessMetrics(prometheusAPI v1.API, metric string, metricObjects []MetricO
 		}
 		defer dumpFile.Close()
 
-		if _, err := fmt.Fprintf(dumpFile, "%s, %s, Vertex, Vertex Type, Pipeline\n", obj.XAxis, obj.YAxis); err != nil {
+		if _, err := fmt.Fprintf(dumpFile, "%s, %s, Vertex, Vertex Type\n", obj.XAxis, obj.YAxis); err != nil {
 			return fmt.Errorf("failed to write to file: %w", err)
 		}
 
@@ -64,12 +65,11 @@ func ProcessMetrics(prometheusAPI v1.API, metric string, metricObjects []MetricO
 
 		for _, v := range matrix {
 			for _, val := range v.Values {
-				if _, err := fmt.Fprintf(dumpFile, "%v, %v, %s, %s, %s\n",
+				if _, err := fmt.Fprintf(dumpFile, "%v, %v, %s, %s\n",
 					val.Timestamp,
 					val.Value,
 					v.Metric["vertex"],
-					v.Metric["vertex_type"],
-					v.Metric["pipeline"]); err != nil {
+					v.Metric["vertex_type"]); err != nil {
 					return fmt.Errorf("failed to write to file: %w", err)
 				}
 			}
