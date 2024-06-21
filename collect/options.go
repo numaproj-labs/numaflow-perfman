@@ -24,7 +24,8 @@ func DefaultOptions() *Options {
 
 type Option func(*Options)
 
-// WithStep sets the step size
+// WithStep sets the step size. This is mainly useful for testing queries with differing step sizes, and to
+// provide the option for specific metrics to use a different step size than the default
 func WithStep(step time.Duration) Option {
 	return func(opts *Options) {
 		opts.step = step
