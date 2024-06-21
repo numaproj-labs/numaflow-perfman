@@ -18,8 +18,8 @@ var pipelineGvr = schema.GroupVersionResource{
 // pipelineCmd represents the pipeline command
 var pipelineCmd = &cobra.Command{
 	Use:   "pipeline",
-	Short: "Apply the base numaflow pipeline",
-	Long:  "Apply the base numaflow pipeline",
+	Short: "Apply the base perfman pipeline",
+	Long:  "Apply the base perfman pipeline",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if err := util.CreateResource("default/pipeline.yaml", dynamicClient, pipelineGvr, util.PerfmanNamespace, log); err != nil {
 			return fmt.Errorf("failed to apply base pipeline: %w", err)

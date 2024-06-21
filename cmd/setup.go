@@ -10,8 +10,11 @@ import (
 	"github.com/numaproj-labs/numaflow-perfman/util"
 )
 
-var Numaflow bool
-var Jetstream bool
+var (
+	hasNumaflow  bool
+	hasJetstream bool
+	hasGrafana   bool
+)
 
 var svGvr = schema.GroupVersionResource{
 	Group:    "monitoring.coreos.com",
@@ -51,6 +54,8 @@ var setupCmd = &cobra.Command{
 			if err := numaflowChart.InstallOrUpgradeRelease(kubeClient, log); err != nil {
 				return fmt.Errorf("unable to install numaflow: %w", err)
 			}
+
+			return nil
 		}
 
 		// Optionally install ISB service
@@ -58,6 +63,28 @@ var setupCmd = &cobra.Command{
 			if err := util.CreateResource("default/isbvc.yaml", dynamicClient, isbGvr, util.PerfmanNamespace, log); err != nil {
 				return fmt.Errorf("failed to create jetsream-isbvc: %w", err)
 			}
+
+			return nil
+		}
+
+		// Optionally install Grafana
+		if cmd.Flag("grafana").Changed {
+			// Install Grafana
+			// TODO: figure out how to sync k8s secret with updated password
+			grafanaChart := util.ChartRelease{
+				ChartName:   "grafana",
+				ReleaseName: util.GrafanaReleaseName,
+				RepoUrl:     "https://grafana.github.io/helm-charts",
+				Namespace:   util.PerfmanNamespace,
+				Values: map[string]interface{}{
+					"adminPassword": util.GrafanaPassword,
+				},
+			}
+			if err := grafanaChart.InstallOrUpgradeRelease(kubeClient, log); err != nil {
+				return fmt.Errorf("unable to install grafana: %w", err)
+			}
+
+			return nil
 		}
 
 		// Install Prometheus Operator
@@ -70,21 +97,6 @@ var setupCmd = &cobra.Command{
 		}
 		if err := kubePrometheusChart.InstallOrUpgradeRelease(kubeClient, log); err != nil {
 			return fmt.Errorf("failed to install prometheus operator: %w", err)
-		}
-
-		// Install Grafana
-		// TODO: figure out how to sync k8s secret with updated password
-		grafanaChart := util.ChartRelease{
-			ChartName:   "grafana",
-			ReleaseName: util.GrafanaReleaseName,
-			RepoUrl:     "https://grafana.github.io/helm-charts",
-			Namespace:   util.PerfmanNamespace,
-			Values: map[string]interface{}{
-				"adminPassword": util.GrafanaPassword,
-			},
-		}
-		if err := grafanaChart.InstallOrUpgradeRelease(kubeClient, log); err != nil {
-			return fmt.Errorf("unable to install grafana: %w", err)
 		}
 
 		// Install metrics service monitors
@@ -103,6 +115,7 @@ var setupCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(setupCmd)
 
-	setupCmd.Flags().BoolVarP(&Numaflow, "numaflow", "n", false, "Install/upgrade the numaflow system")
-	setupCmd.Flags().BoolVarP(&Jetstream, "jetstream", "j", false, "Install jetsream as the InterStepBuffer service")
+	setupCmd.Flags().BoolVarP(&hasNumaflow, "numaflow", "n", false, "Install/upgrade the numaflow system")
+	setupCmd.Flags().BoolVarP(&hasJetstream, "jetstream", "j", false, "Install jetsream as the InterStepBuffer service")
+	setupCmd.Flags().BoolVarP(&hasGrafana, "grafana", "g", false, "Install Grafana")
 }

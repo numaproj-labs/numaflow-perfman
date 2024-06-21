@@ -12,16 +12,19 @@ import (
 	"github.com/numaproj-labs/numaflow-perfman/util"
 )
 
-var config *rest.Config
-var kubeClient *kubernetes.Clientset
-var dynamicClient *dynamic.DynamicClient
-var log *zap.Logger
+var (
+	config        *rest.Config
+	kubeClient    *kubernetes.Clientset
+	dynamicClient *dynamic.DynamicClient
+	log           *zap.Logger
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "perfman",
-	Short: "Numaflow performance testing framework",
-	Long:  "Perfman is a command line utility for performance testing changes to the numaflow platform",
+	Use:          "perfman",
+	Short:        "Numaflow performance testing framework",
+	Long:         "Perfman is a command line utility for performance testing changes to the numaflow platform",
+	SilenceUsage: true,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately

@@ -7,17 +7,17 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/numaproj-labs/numaflow-perfman/report"
+	"github.com/numaproj-labs/numaflow-perfman/snapshot"
 	"github.com/numaproj-labs/numaflow-perfman/util"
 )
 
-var reportCmd = &cobra.Command{
-	Use:   "report",
-	Short: "Generate reporting dashboard snapshot url",
-	Long:  "The report command generates a url for user to open and see the snapshot of the reporting dashboard",
+var snapshotCmd = &cobra.Command{
+	Use:   "snapshot",
+	Short: "Generate Grafana dashboard snapshot url",
+	Long:  "Generate a url to access the snapshot of the reporting dashboard in Grafana",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// TODO: can all be moved to viper configuration
-		grafanaURL := "http://localhost:3000"
+		grafanaURL := util.GrafanaURL
 		filePath := "default/dashboard-template.json" // the path to default dashboard template file.
 		username := "admin"
 		password := util.GrafanaPassword
@@ -26,12 +26,12 @@ var reportCmd = &cobra.Command{
 		auth := base64.StdEncoding.EncodeToString([]byte(username + ":" + password))
 
 		// Create the Prometheus data source
-		dsId, err := report.CreateGrafanaDataSource(grafanaURL, auth)
+		dsId, err := snapshot.CreateGrafanaDataSource(grafanaURL, auth)
 		if err != nil {
 			if strings.Contains(err.Error(), "data source with the same name already exists") {
 				log.Warn("Prometheus data source has already been configured.")
 				// Attempt to fetch the UID of the existing data source
-				dsId, err = report.FetchGrafanaDataSourceUID(grafanaURL, auth)
+				dsId, err = snapshot.FetchGrafanaDataSourceUID(grafanaURL, auth)
 				if err != nil {
 					return fmt.Errorf("error fetching existing data source UID: %w", err)
 				}
@@ -41,7 +41,7 @@ var reportCmd = &cobra.Command{
 		}
 
 		// Read dashboard template from JSON file
-		dashboardData, err := report.ReadJSONFile(filePath)
+		dashboardData, err := snapshot.ReadJSONFile(filePath)
 		if err != nil {
 			return err
 		}
@@ -51,20 +51,20 @@ var reportCmd = &cobra.Command{
 
 		// Create Dashboard
 		// TODO: handle case when the dashboard already exists.
-		// (we should move data source and dashboard creation into setup and let report to only generate snapshot.)
-		resp, err := report.CreateDashboard(grafanaURL, auth, dashboardData)
+		// (we should move data source and dashboard creation into setup and let snapshot to only generate snapshot.)
+		resp, err := snapshot.CreateDashboard(grafanaURL, auth, dashboardData)
 		if err != nil {
 			return err
 		}
 
 		// Fetch the dashboard
-		dashboardData, err = report.FetchDashboard(grafanaURL, auth, resp.UID)
+		dashboardData, err = snapshot.FetchDashboard(grafanaURL, auth, resp.UID)
 		if err != nil {
 			return err
 		}
 
 		// Create a snapshot
-		reportUrl, err := report.CreateSnapshot(grafanaURL, auth, dashboardData)
+		reportUrl, err := snapshot.CreateSnapshot(grafanaURL, auth, dashboardData)
 		if err != nil {
 			return err
 		}
@@ -75,5 +75,5 @@ var reportCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(reportCmd)
+	rootCmd.AddCommand(snapshotCmd)
 }

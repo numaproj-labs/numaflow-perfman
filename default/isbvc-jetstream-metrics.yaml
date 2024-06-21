@@ -9,6 +9,7 @@ spec:
     - scheme: http
       port: metrics
       targetPort: 7777
+      interval: 15s
   selector:
     matchLabels:
       app.kubernetes.io/component: isbsvc
