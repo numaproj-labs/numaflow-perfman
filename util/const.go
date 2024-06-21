@@ -20,9 +20,8 @@ const (
 	// RateInterval is used to determine over what period the rate function is computed.
 	// It should typically be at least 4-5 times the scrape interval,
 	// which is the amount of time between each "scrape" of data from the monitored targets.
-	// The scrape interval can be adjusted in the yaml file for the service monitor using the `interval` key,
-	// which is currently set to 15s for the pipeline and ISB service monitors. If the 'interval' key is modified
-	// make sure to adjust RateInterval accordingly
+	// The scrape interval can be adjusted in the yaml file for the service monitor using the `interval` key.
+	// If the 'interval' key is modified make sure to adjust RateInterval accordingly
 	RateInterval = 1 * time.Minute
 
 	// Step is used when querying data, and should be tuned based on the granularity of data you want when querying.
