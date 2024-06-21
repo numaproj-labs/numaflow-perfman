@@ -9,6 +9,8 @@ import (
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	"github.com/prometheus/common/model"
 	"go.uber.org/zap"
+
+	"github.com/numaproj-labs/numaflow-perfman/metrics"
 )
 
 func createDumpFilePath(dataDir string, metric string, filename string, timePeriod int) (*os.File, error) {
@@ -26,7 +28,7 @@ func createDumpFilePath(dataDir string, metric string, filename string, timePeri
 }
 
 // ProcessMetrics queries the Prometheus API with the given metric object and outputs the returned data into csv files
-func ProcessMetrics(prometheusAPI v1.API, metric string, metricObjects []MetricObject, dataDir string, timePeriod int, log *zap.Logger, inputOptions ...Option) error {
+func ProcessMetrics(prometheusAPI v1.API, metric string, metricObjects []metrics.MetricObject, dataDir string, timePeriod int, log *zap.Logger, inputOptions ...Option) error {
 	opts := DefaultOptions()
 
 	for _, inputOption := range inputOptions {
@@ -65,6 +67,7 @@ func ProcessMetrics(prometheusAPI v1.API, metric string, metricObjects []MetricO
 
 		for _, v := range matrix {
 			for _, val := range v.Values {
+				// TODO: make generic as future metrics may not have fields like 'vertex', 'vertex_type', etc.
 				if _, err := fmt.Fprintf(dumpFile, "%v, %v, %s, %s\n",
 					val.Timestamp,
 					val.Value,

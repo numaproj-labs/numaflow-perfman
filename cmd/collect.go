@@ -9,41 +9,32 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/numaproj-labs/numaflow-perfman/collect"
+	"github.com/numaproj-labs/numaflow-perfman/metrics"
 	"github.com/numaproj-labs/numaflow-perfman/util"
 )
 
 var (
-	Name    string
-	Last    int
-	Metrics []string
+	Name            string
+	LookbackMinutes int
+	Metrics         []string
 )
 
 var validMetrics []string
-var metricsMatrix = map[string][]collect.MetricObject{
-	"data-forward": {
-		collect.InboundMessages,
-	},
-	"latency": {
-		collect.ForwarderE2EP90,
-		collect.ForwarderE2EP95,
-		collect.ForwarderE2EP99,
-	},
-}
 
 // collectCmd represents the collect command
 var collectCmd = &cobra.Command{
 	Use:   "collect",
 	Short: "Collect Prometheus data",
-	Long:  "Collect Prometheus metrics from a running pipeline, for a given time range",
+	Long:  "Collect Prometheus metrics from a running pipeline, for a given time range, and output as CSV files",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if Last <= 0 {
+		if LookbackMinutes <= 0 {
 			return fmt.Errorf("value provided to period flag must be greater than 0")
 		}
 
 		if cmd.Flags().Changed("metrics") {
 			// Check that the provided metrics are valid
 			for _, metric := range Metrics {
-				if _, ok := metricsMatrix[metric]; !ok {
+				if _, ok := metrics.MetricGroups[metric]; !ok {
 					return fmt.Errorf("invalid metric: %s, valid metrics are: %v", metric, validMetrics)
 				}
 			}
@@ -58,9 +49,9 @@ var collectCmd = &cobra.Command{
 		v1api := v1.NewAPI(client)
 
 		for _, metric := range Metrics {
-			metricObjects := metricsMatrix[metric]
-			if err := collect.ProcessMetrics(v1api, metric, metricObjects, Name, Last, log); err != nil {
-				return fmt.Errorf("failed to process metrics over the last %d minutes: %w", Last, err)
+			metricObjects := metrics.MetricGroups[metric]
+			if err := collect.ProcessMetrics(v1api, metric, metricObjects, Name, LookbackMinutes, log); err != nil {
+				return fmt.Errorf("failed to process metrics over the last %d minutes: %w", LookbackMinutes, err)
 			}
 		}
 
@@ -71,13 +62,13 @@ var collectCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(collectCmd)
 
-	for m := range metricsMatrix {
+	for m := range metrics.MetricGroups {
 		validMetrics = append(validMetrics, m)
 	}
 	collectCmd.Flags().StringVarP(&Name, "name", "n", "", "Specify the name of the folder to output the Prometheus data files")
-	collectCmd.Flags().IntVarP(&Last, "last", "l", 0, "Specify how many minutes to go back starting from the current time")
-	collectCmd.Flags().StringSliceVarP(&Metrics, "metrics", "m", validMetrics, "Specify the metrics to collect Prometheus data for")
-	if err := collectCmd.MarkFlagRequired("last"); err != nil {
+	collectCmd.Flags().IntVarP(&LookbackMinutes, "lookbackminutes", "l", 0, "Specify how many minutes to go back starting from the current time")
+	collectCmd.Flags().StringSliceVarP(&Metrics, "metrics", "m", validMetrics, "Specify the metrics to collect Prometheus data for. Available metrics are:")
+	if err := collectCmd.MarkFlagRequired("lookbackminutes"); err != nil {
 		log.Fatal("Failed to mark period flag as required", zap.Error(err))
 	}
 	if err := collectCmd.MarkFlagRequired("name"); err != nil {

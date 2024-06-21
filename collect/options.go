@@ -10,6 +10,7 @@ type Options struct {
 	step time.Duration
 }
 
+// Step returns the step size
 func (o *Options) Step() time.Duration {
 	return o.step
 }
@@ -23,7 +24,7 @@ func DefaultOptions() *Options {
 
 type Option func(*Options)
 
-// WithStep sets the increment between each point in the range
+// WithStep sets the step size
 func WithStep(step time.Duration) Option {
 	return func(opts *Options) {
 		opts.step = step

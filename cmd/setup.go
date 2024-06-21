@@ -11,9 +11,9 @@ import (
 )
 
 var (
-	Numaflow  bool
-	Jetstream bool
-	Grafana   bool
+	hasNumaflow  bool
+	hasJetstream bool
+	hasGrafana   bool
 )
 
 var svGvr = schema.GroupVersionResource{
@@ -115,7 +115,7 @@ var setupCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(setupCmd)
 
-	setupCmd.Flags().BoolVarP(&Numaflow, "numaflow", "n", false, "Install/upgrade the numaflow system")
-	setupCmd.Flags().BoolVarP(&Jetstream, "jetstream", "j", false, "Install jetsream as the InterStepBuffer service")
-	setupCmd.Flags().BoolVarP(&Grafana, "grafana", "g", false, "Install Grafana")
+	setupCmd.Flags().BoolVarP(&hasNumaflow, "numaflow", "n", false, "Install/upgrade the numaflow system")
+	setupCmd.Flags().BoolVarP(&hasJetstream, "jetstream", "j", false, "Install jetsream as the InterStepBuffer service")
+	setupCmd.Flags().BoolVarP(&hasGrafana, "grafana", "g", false, "Install Grafana")
 }

@@ -9,6 +9,7 @@ spec:
     - scheme: https
       port: metrics
       targetPort: 2469
+      interval: 15s
       tlsConfig:
         insecureSkipVerify: true
   selector:
