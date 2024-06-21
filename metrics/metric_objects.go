@@ -14,7 +14,7 @@ const (
 
 // MetricObject is the unit used for processing metrics, and is part of a metric group
 type MetricObject struct {
-	Query    string // the PromQL query used to fetch the metric via the Prometheus API
+	Query    string // the PromQL query used in call to Prometheus API
 	Filename string // the name of the CSV file that will be produced for this metric
 	XAxis    string // The column name in the CSV file for the independent variable
 	YAxis    string // the column name in the CSV file for the dependent variable
