@@ -13,5 +13,6 @@ var MetricGroups = map[string][]MetricObject{
 	},
 	"resources": {
 		Memory,
+		CPU,
 	},
 }
