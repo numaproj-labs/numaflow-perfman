@@ -12,6 +12,14 @@ const (
 	seconds = int((util.RateInterval % time.Minute) / time.Second)
 )
 
+const (
+	LabelVertex             = "vertex"
+	LabelVertexType         = "vertex_type"
+	LabelPipeline           = "pipeline"
+	LabelVertexReplicaIndex = "replica"
+	LabelPodName            = "pod"
+)
+
 // MetricObject is the unit used for processing metrics, and is part of a metric group
 type MetricObject struct {
 	Query    string   // the PromQL query used in call to Prometheus API
@@ -29,7 +37,7 @@ var InboundMessages = MetricObject{
 	Filename: "inbound-messages",
 	XAxis:    "unix_timestamp",
 	YAxis:    "num_messages_per_second",
-	Labels:   []string{"vertex", "vertex_type", "pipeline", "replica"},
+	Labels:   []string{LabelVertex, LabelVertexType, LabelPipeline, LabelVertexReplicaIndex},
 }
 
 // Latency metrics
@@ -38,7 +46,7 @@ var ForwarderProcessingTimeP90 = MetricObject{
 	Filename: "forwarder-e2e-batch-processing-time-p90",
 	XAxis:    "unix_timestamp",
 	YAxis:    "seconds",
-	Labels:   []string{"vertex", "vertex_type", "pipeline", "replica"},
+	Labels:   []string{LabelVertex, LabelVertexType, LabelPipeline, LabelVertexReplicaIndex},
 }
 
 var ForwarderProcessingTimeP95 = MetricObject{
@@ -46,7 +54,7 @@ var ForwarderProcessingTimeP95 = MetricObject{
 	Filename: "forwarder-e2e-batch-processing-time-p95",
 	XAxis:    "unix_timestamp",
 	YAxis:    "seconds",
-	Labels:   []string{"vertex", "vertex_type", "pipeline", "replica"},
+	Labels:   []string{LabelVertex, LabelVertexType, LabelPipeline, LabelVertexReplicaIndex},
 }
 
 var ForwarderProcessingTimeP99 = MetricObject{
@@ -54,7 +62,7 @@ var ForwarderProcessingTimeP99 = MetricObject{
 	Filename: "forwarder-e2e-batch-processing-time-p99",
 	XAxis:    "unix_timestamp",
 	YAxis:    "seconds",
-	Labels:   []string{"vertex", "vertex_type", "pipeline", "replica"},
+	Labels:   []string{LabelVertex, LabelVertexType, LabelPipeline, LabelVertexReplicaIndex},
 }
 
 // Resource metrics
@@ -63,7 +71,7 @@ var Memory = MetricObject{
 	Filename: "memory-usage",
 	XAxis:    "unix_timestamp",
 	YAxis:    "bytes",
-	Labels:   []string{"pod"},
+	Labels:   []string{LabelPodName},
 }
 
 var CPU = MetricObject{
@@ -71,5 +79,5 @@ var CPU = MetricObject{
 	Filename: "cpu-usage",
 	XAxis:    "unix_timestamp",
 	YAxis:    "milliCPUs",
-	Labels:   []string{"pod"},
+	Labels:   []string{LabelPodName},
 }
