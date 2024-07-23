@@ -54,8 +54,6 @@ var setupCmd = &cobra.Command{
 			if err := numaflowChart.InstallOrUpgradeRelease(kubeClient, log); err != nil {
 				return fmt.Errorf("unable to install numaflow: %w", err)
 			}
-
-			return nil
 		}
 
 		// Optionally install ISB service
@@ -63,8 +61,6 @@ var setupCmd = &cobra.Command{
 			if err := util.CreateResource("default/isbvc.yaml", dynamicClient, isbGvr, util.PerfmanNamespace, log); err != nil {
 				return fmt.Errorf("failed to create jetsream-isbvc: %w", err)
 			}
-
-			return nil
 		}
 
 		// Optionally install Grafana
@@ -83,8 +79,6 @@ var setupCmd = &cobra.Command{
 			if err := grafanaChart.InstallOrUpgradeRelease(kubeClient, log); err != nil {
 				return fmt.Errorf("unable to install grafana: %w", err)
 			}
-
-			return nil
 		}
 
 		// Install Prometheus Operator

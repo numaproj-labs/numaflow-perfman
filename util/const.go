@@ -3,12 +3,15 @@ package util
 import "time"
 
 // TODO: use viper for configuration management
+
+// Namespace config
 const (
-	// Namespace config
 	PerfmanNamespace  = "default"
 	NumaflowNamespace = "numaflow-system"
+)
 
-	// Grafana and Prometheus config
+// Grafana and Prometheus config
+const (
 	GrafanaPassword         = "admin"
 	GrafanaURL              = "http://localhost:3000"
 	PrometheusURL           = "http://localhost:9090"

@@ -14,10 +14,11 @@ const (
 
 // MetricObject is the unit used for processing metrics, and is part of a metric group
 type MetricObject struct {
-	Query    string // the PromQL query used in call to Prometheus API
-	Filename string // the name of the CSV file that will be produced for this metric
-	XAxis    string // The column name in the CSV file for the independent variable
-	YAxis    string // the column name in the CSV file for the dependent variable
+	Query    string   // the PromQL query used in call to Prometheus API
+	Filename string   // the name of the CSV file that will be produced for this metric
+	XAxis    string   // The column name in the CSV file for the independent variable
+	YAxis    string   // the column name in the CSV file for the dependent variable
+	Labels   []string // the labels supported by the metric, used for the remaining columns the of CSV file
 }
 
 // TODO: Configure Query strings to pass in pipeline dynamically in order to support customized pipelines
@@ -26,28 +27,41 @@ type MetricObject struct {
 var InboundMessages = MetricObject{
 	Query:    fmt.Sprintf(`rate(forwarder_read_total{pipeline="perfman-base-pipeline"}[%dm%ds])`, minutes, seconds),
 	Filename: "inbound-messages",
-	XAxis:    "Unix Timestamp",
-	YAxis:    "Number of Messages Per Second",
+	XAxis:    "unix_timestamp",
+	YAxis:    "num_messages_per_second",
+	Labels:   []string{"vertex", "vertex_type", "pipeline", "replica"},
 }
 
 // Latency metrics
 var ForwarderProcessingTimeP90 = MetricObject{
 	Query:    fmt.Sprintf(`histogram_quantile(0.9, rate(forwarder_forward_chunk_processing_time_bucket{pipeline="perfman-base-pipeline"}[%dm%ds])) / 1000000`, minutes, seconds),
 	Filename: "forwarder-e2e-batch-processing-time-p90",
-	XAxis:    "Unix Timestamp",
-	YAxis:    "Seconds",
+	XAxis:    "unix_timestamp",
+	YAxis:    "seconds",
+	Labels:   []string{"vertex", "vertex_type", "pipeline", "replica"},
 }
 
 var ForwarderProcessingTimeP95 = MetricObject{
 	Query:    fmt.Sprintf(`histogram_quantile(0.95, rate(forwarder_forward_chunk_processing_time_bucket{pipeline="perfman-base-pipeline"}[%dm%ds])) / 1000000`, minutes, seconds),
 	Filename: "forwarder-e2e-batch-processing-time-p95",
-	XAxis:    "Unix Timestamp",
-	YAxis:    "Seconds",
+	XAxis:    "unix_timestamp",
+	YAxis:    "seconds",
+	Labels:   []string{"vertex", "vertex_type", "pipeline", "replica"},
 }
 
 var ForwarderProcessingTimeP99 = MetricObject{
 	Query:    fmt.Sprintf(`histogram_quantile(0.99, rate(forwarder_forward_chunk_processing_time_bucket{pipeline="perfman-base-pipeline"}[%dm%ds])) / 1000000`, minutes, seconds),
 	Filename: "forwarder-e2e-batch-processing-time-p99",
-	XAxis:    "Unix Timestamp",
-	YAxis:    "Seconds",
+	XAxis:    "unix_timestamp",
+	YAxis:    "seconds",
+	Labels:   []string{"vertex", "vertex_type", "pipeline", "replica"},
+}
+
+// Resource metrics
+var Memory = MetricObject{
+	Query:    `sum(container_memory_usage_bytes{pod=~"perfman-base-pipeline.*", pod!~"perfman-base-pipeline.*-(daemon).*"} / 1024 / 1024) by (pod)`,
+	Filename: "memory-usage",
+	XAxis:    "unix_timestamp",
+	YAxis:    "bytes",
+	Labels:   []string{"pod"},
 }

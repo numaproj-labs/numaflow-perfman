@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
@@ -42,40 +43,48 @@ func ProcessMetrics(prometheusAPI v1.API, metric string, metricObjects []metrics
 	}
 
 	for _, obj := range metricObjects {
-		dumpFile, err := createDumpFilePath(dataDir, metric, obj.Filename, timePeriod)
-		if err != nil {
-			return fmt.Errorf("error creating dump file path: %w", err)
-		}
-		defer dumpFile.Close()
-
-		if _, err := fmt.Fprintf(dumpFile, "%s, %s, Vertex, Vertex Type\n", obj.XAxis, obj.YAxis); err != nil {
-			return fmt.Errorf("failed to write to file: %w", err)
-		}
-
-		result, warnings, err := prometheusAPI.QueryRange(context.TODO(), obj.Query, queryRange)
-		if err != nil {
-			return fmt.Errorf("error querying Prometheus: %w", err)
-		}
-		// if there are any warnings, log them
-		if len(warnings) > 0 {
-			for _, w := range warnings {
-				log.Warn("Prometheus API warning", zap.String("warning", w))
+		if err := func() error {
+			dumpFile, err := createDumpFilePath(dataDir, metric, obj.Filename, timePeriod)
+			if err != nil {
+				return fmt.Errorf("error creating dump file path: %w", err)
 			}
-		}
+			defer dumpFile.Close()
 
-		matrix := result.(model.Matrix)
+			if _, err := fmt.Fprintf(dumpFile, "%s, %s, %s\n", obj.XAxis, obj.YAxis, strings.Join(obj.Labels, ", ")); err != nil {
+				return fmt.Errorf("failed to write to file: %w", err)
+			}
 
-		for _, v := range matrix {
-			for _, val := range v.Values {
-				// TODO: make generic as future metrics may not have fields like 'vertex', 'vertex_type', etc.
-				if _, err := fmt.Fprintf(dumpFile, "%v, %v, %s, %s\n",
-					val.Timestamp,
-					val.Value,
-					v.Metric["vertex"],
-					v.Metric["vertex_type"]); err != nil {
-					return fmt.Errorf("failed to write to file: %w", err)
+			result, warnings, err := prometheusAPI.QueryRange(context.TODO(), obj.Query, queryRange)
+			if err != nil {
+				return fmt.Errorf("error querying Prometheus: %w", err)
+			}
+			// if there are any warnings, log them
+			if len(warnings) > 0 {
+				for _, w := range warnings {
+					log.Warn("Prometheus API warning", zap.String("warning", w))
 				}
 			}
+
+			matrix := result.(model.Matrix)
+
+			for _, v := range matrix {
+				for _, val := range v.Values {
+					format := "%v, %v, " + strings.Repeat("%s, ", len(obj.Labels)-1) + "%s\n"
+
+					args := []interface{}{val.Timestamp, val.Value}
+					for _, label := range obj.Labels {
+						args = append(args, v.Metric[model.LabelName(label)])
+					}
+
+					if _, err := fmt.Fprintf(dumpFile, format, args...); err != nil {
+						return fmt.Errorf("failed to write to file: %w", err)
+					}
+				}
+			}
+
+			return nil
+		}(); err != nil {
+			return fmt.Errorf("error when processing metric objects: %w", err)
 		}
 	}
 
