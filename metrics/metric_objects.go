@@ -67,7 +67,7 @@ var Memory = MetricObject{
 }
 
 var CPU = MetricObject{
-	Query:    fmt.Sprintf(`sum(rate(container_cpu_usage_seconds_total{pod=~"perfman-base-pipeline.*"}[%dm%ds]) * 1000) by (pod)`, minutes, seconds),
+	Query:    fmt.Sprintf(`sum(rate(container_cpu_usage_seconds_total{pod=~"perfman-base-pipeline.*", pod!~"perfman-base-pipeline.*-(daemon).*"}[%dm%ds]) * 1000) by (pod)`, minutes, seconds),
 	Filename: "cpu-usage",
 	XAxis:    "unix_timestamp",
 	YAxis:    "milliCPUs",
