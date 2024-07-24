@@ -13,9 +13,9 @@ const (
 )
 
 const (
-	LabelVertex             = "vertex"
+	LabelVertexName         = "vertex"
 	LabelVertexType         = "vertex_type"
-	LabelPipeline           = "pipeline"
+	LabelPipelineName       = "pipeline"
 	LabelVertexReplicaIndex = "replica"
 	LabelPodName            = "pod"
 )
@@ -26,7 +26,7 @@ type MetricObject struct {
 	Filename string   // the name of the CSV file that will be produced for this metric
 	XAxis    string   // The column name in the CSV file for the independent variable
 	YAxis    string   // the column name in the CSV file for the dependent variable
-	Labels   []string // the labels supported by the metric, used for the remaining columns the of CSV file
+	Labels   []string // the labels supported by the metric, used for the remaining columns of the CSV file
 }
 
 // TODO: Configure Query strings to pass in pipeline dynamically in order to support customized pipelines
@@ -36,8 +36,8 @@ var InboundMessages = MetricObject{
 	Query:    fmt.Sprintf(`rate(forwarder_read_total{pipeline="perfman-base-pipeline"}[%dm%ds])`, minutes, seconds),
 	Filename: "inbound-messages",
 	XAxis:    "unix_timestamp",
-	YAxis:    "num_messages_per_second",
-	Labels:   []string{LabelVertex, LabelVertexType, LabelPipeline, LabelVertexReplicaIndex},
+	YAxis:    "number_of_messages_per_second",
+	Labels:   []string{LabelVertexName, LabelVertexType, LabelPipelineName, LabelVertexReplicaIndex},
 }
 
 // Latency metrics
@@ -46,7 +46,7 @@ var ForwarderProcessingTimeP90 = MetricObject{
 	Filename: "forwarder-e2e-batch-processing-time-p90",
 	XAxis:    "unix_timestamp",
 	YAxis:    "seconds",
-	Labels:   []string{LabelVertex, LabelVertexType, LabelPipeline, LabelVertexReplicaIndex},
+	Labels:   []string{LabelVertexName, LabelVertexType, LabelPipelineName, LabelVertexReplicaIndex},
 }
 
 var ForwarderProcessingTimeP95 = MetricObject{
@@ -54,7 +54,7 @@ var ForwarderProcessingTimeP95 = MetricObject{
 	Filename: "forwarder-e2e-batch-processing-time-p95",
 	XAxis:    "unix_timestamp",
 	YAxis:    "seconds",
-	Labels:   []string{LabelVertex, LabelVertexType, LabelPipeline, LabelVertexReplicaIndex},
+	Labels:   []string{LabelVertexName, LabelVertexType, LabelPipelineName, LabelVertexReplicaIndex},
 }
 
 var ForwarderProcessingTimeP99 = MetricObject{
@@ -62,7 +62,7 @@ var ForwarderProcessingTimeP99 = MetricObject{
 	Filename: "forwarder-e2e-batch-processing-time-p99",
 	XAxis:    "unix_timestamp",
 	YAxis:    "seconds",
-	Labels:   []string{LabelVertex, LabelVertexType, LabelPipeline, LabelVertexReplicaIndex},
+	Labels:   []string{LabelVertexName, LabelVertexType, LabelPipelineName, LabelVertexReplicaIndex},
 }
 
 // Resource metrics
