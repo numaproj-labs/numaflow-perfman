@@ -15,8 +15,7 @@ import (
 )
 
 func createDumpFilePath(dataDir string, metric string, filename string, timePeriod int) (*os.File, error) {
-	err := os.MkdirAll(fmt.Sprintf("output/%s/%s", dataDir, metric), os.ModePerm)
-	if err != nil {
+	if err := os.MkdirAll(fmt.Sprintf("output/%s/%s", dataDir, metric), os.ModePerm); err != nil {
 		return nil, fmt.Errorf("failed to create data directory: %w", err)
 	}
 
@@ -28,7 +27,41 @@ func createDumpFilePath(dataDir string, metric string, filename string, timePeri
 	return f, nil
 }
 
+func writeToDumpFile(metricObject metrics.MetricObject, matrix model.Matrix, dataDir string, metric string, timePeriod int) error {
+	dumpFile, err := createDumpFilePath(dataDir, metric, metricObject.Filename, timePeriod)
+	if err != nil {
+		return fmt.Errorf("error creating dump file path: %w", err)
+	}
+	defer dumpFile.Close()
+
+	// Write the columns of the CSV file
+	if _, err := fmt.Fprintf(dumpFile, "%s, %s, %s\n", metricObject.XAxis, metricObject.YAxis, strings.Join(metricObject.Labels, ", ")); err != nil {
+		return fmt.Errorf("failed to write to file: %w", err)
+	}
+
+	for _, v := range matrix {
+		for _, val := range v.Values {
+			format := "%v, %v, " + strings.Repeat("%s, ", len(metricObject.Labels)-1) + "%s\n"
+			args := []interface{}{val.Timestamp, val.Value}
+			for _, label := range metricObject.Labels {
+				args = append(args, v.Metric[model.LabelName(label)])
+			}
+
+			// With each iteration over the result matrix, write one row of values
+			if _, err := fmt.Fprintf(dumpFile, format, args...); err != nil {
+				return fmt.Errorf("failed to write to file: %w", err)
+			}
+		}
+	}
+
+	return nil
+}
+
 // ProcessMetrics queries the Prometheus API with the given metric object and outputs the returned data into CSV files
+// prometheusAPI: the Prometheus client used to make API calls with
+// metric: the current metric group being processed
+// dataDir: the name of the directory that the CSV files will be written to
+// timePeriod: the time, in minutes, to look back, starting from the current time, for the Prometheus query
 func ProcessMetrics(prometheusAPI v1.API, metric string, metricObjects []metrics.MetricObject, dataDir string, timePeriod int, log *zap.Logger, inputOptions ...Option) error {
 	opts := DefaultOptions()
 
@@ -43,51 +76,21 @@ func ProcessMetrics(prometheusAPI v1.API, metric string, metricObjects []metrics
 	}
 
 	for _, obj := range metricObjects {
-		if err := func() error {
-			result, warnings, err := prometheusAPI.QueryRange(context.TODO(), obj.Query, queryRange)
-			if err != nil {
-				return fmt.Errorf("error querying Prometheus: %w", err)
+		result, warnings, err := prometheusAPI.QueryRange(context.TODO(), obj.Query, queryRange)
+		if err != nil {
+			return fmt.Errorf("error querying Prometheus: %w", err)
+		}
+		// If there are any warnings, log them
+		if len(warnings) > 0 {
+			for _, w := range warnings {
+				log.Warn("Prometheus API warning", zap.String("warning", w))
 			}
-			// If there are any warnings, log them
-			if len(warnings) > 0 {
-				for _, w := range warnings {
-					log.Warn("Prometheus API warning", zap.String("warning", w))
-				}
-			}
+		}
 
-			matrix := result.(model.Matrix)
+		matrix := result.(model.Matrix)
 
-			// Create a CSV file that will contain the Prometheus data
-			dumpFile, err := createDumpFilePath(dataDir, metric, obj.Filename, timePeriod)
-			if err != nil {
-				return fmt.Errorf("error creating dump file path: %w", err)
-			}
-			defer dumpFile.Close()
-
-			// Write the columns of the CSV file
-			if _, err := fmt.Fprintf(dumpFile, "%s, %s, %s\n", obj.XAxis, obj.YAxis, strings.Join(obj.Labels, ", ")); err != nil {
-				return fmt.Errorf("failed to write to file: %w", err)
-			}
-
-			for _, v := range matrix {
-				for _, val := range v.Values {
-					format := "%v, %v, " + strings.Repeat("%s, ", len(obj.Labels)-1) + "%s\n"
-
-					args := []interface{}{val.Timestamp, val.Value}
-					for _, label := range obj.Labels {
-						args = append(args, v.Metric[model.LabelName(label)])
-					}
-
-					// With each iteration over the result matrix, write one row of values
-					if _, err := fmt.Fprintf(dumpFile, format, args...); err != nil {
-						return fmt.Errorf("failed to write to file: %w", err)
-					}
-				}
-			}
-
-			return nil
-		}(); err != nil {
-			return fmt.Errorf("error when processing metric objects: %w", err)
+		if err := writeToDumpFile(obj, matrix, dataDir, metric, timePeriod); err != nil {
+			return fmt.Errorf("error when processing metric object: %w", err)
 		}
 	}
 
