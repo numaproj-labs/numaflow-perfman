@@ -43,12 +43,12 @@ func writeToDumpFile(metricObject metrics.MetricObject, matrix model.Matrix, dat
 		return fmt.Errorf("failed to write to file: %w", err)
 	}
 
-	for _, v := range matrix {
-		for _, val := range v.Values {
+	for _, ss := range matrix {
+		for _, sp := range ss.Values {
 			format := "%v, %v, " + strings.Repeat("%s, ", len(metricObject.Labels)-1) + "%s\n"
-			args := []interface{}{val.Timestamp, val.Value}
+			args := []interface{}{sp.Timestamp, sp.Value}
 			for _, label := range metricObject.Labels {
-				args = append(args, v.Metric[model.LabelName(label)])
+				args = append(args, ss.Metric[model.LabelName(label)])
 			}
 
 			// With each iteration over the result matrix, write one row of values
