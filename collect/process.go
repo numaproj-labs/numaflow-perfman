@@ -28,7 +28,7 @@ func createDumpFilePath(dataDir string, metric string, filename string, timePeri
 	return f, nil
 }
 
-// ProcessMetrics queries the Prometheus API with the given metric object and outputs the returned data into csv files
+// ProcessMetrics queries the Prometheus API with the given metric object and outputs the returned data into CSV files
 func ProcessMetrics(prometheusAPI v1.API, metric string, metricObjects []metrics.MetricObject, dataDir string, timePeriod int, log *zap.Logger, inputOptions ...Option) error {
 	opts := DefaultOptions()
 
@@ -44,21 +44,18 @@ func ProcessMetrics(prometheusAPI v1.API, metric string, metricObjects []metrics
 
 	for _, obj := range metricObjects {
 		if err := func() error {
+			// Create a CSV file that will contain the Prometheus data
 			dumpFile, err := createDumpFilePath(dataDir, metric, obj.Filename, timePeriod)
 			if err != nil {
 				return fmt.Errorf("error creating dump file path: %w", err)
 			}
 			defer dumpFile.Close()
 
-			if _, err := fmt.Fprintf(dumpFile, "%s, %s, %s\n", obj.XAxis, obj.YAxis, strings.Join(obj.Labels, ", ")); err != nil {
-				return fmt.Errorf("failed to write to file: %w", err)
-			}
-
 			result, warnings, err := prometheusAPI.QueryRange(context.TODO(), obj.Query, queryRange)
 			if err != nil {
 				return fmt.Errorf("error querying Prometheus: %w", err)
 			}
-			// if there are any warnings, log them
+			// If there are any warnings, log them
 			if len(warnings) > 0 {
 				for _, w := range warnings {
 					log.Warn("Prometheus API warning", zap.String("warning", w))
@@ -66,6 +63,11 @@ func ProcessMetrics(prometheusAPI v1.API, metric string, metricObjects []metrics
 			}
 
 			matrix := result.(model.Matrix)
+
+			// Write the columns of the CSV file
+			if _, err := fmt.Fprintf(dumpFile, "%s, %s, %s\n", obj.XAxis, obj.YAxis, strings.Join(obj.Labels, ", ")); err != nil {
+				return fmt.Errorf("failed to write to file: %w", err)
+			}
 
 			for _, v := range matrix {
 				for _, val := range v.Values {
@@ -76,6 +78,7 @@ func ProcessMetrics(prometheusAPI v1.API, metric string, metricObjects []metrics
 						args = append(args, v.Metric[model.LabelName(label)])
 					}
 
+					// With each iteration over the result matrix, write one row of values
 					if _, err := fmt.Fprintf(dumpFile, format, args...); err != nil {
 						return fmt.Errorf("failed to write to file: %w", err)
 					}
