@@ -27,12 +27,16 @@ func createDumpFilePath(dataDir string, metric string, filename string, timePeri
 	return f, nil
 }
 
-func writeToDumpFile(metricObject metrics.MetricObject, matrix model.Matrix, dataDir string, metric string, timePeriod int) error {
+func writeToDumpFile(metricObject metrics.MetricObject, matrix model.Matrix, dataDir string, metric string, timePeriod int) (err error) {
 	dumpFile, err := createDumpFilePath(dataDir, metric, metricObject.Filename, timePeriod)
 	if err != nil {
 		return fmt.Errorf("error creating dump file path: %w", err)
 	}
-	defer dumpFile.Close()
+	defer func() {
+		if closeErr := dumpFile.Close(); closeErr != nil && err == nil {
+			err = fmt.Errorf("failed to close dump file: %w", closeErr)
+		}
+	}()
 
 	// Write the columns of the CSV file
 	if _, err := fmt.Fprintf(dumpFile, "%s, %s, %s\n", metricObject.XAxis, metricObject.YAxis, strings.Join(metricObject.Labels, ", ")); err != nil {
