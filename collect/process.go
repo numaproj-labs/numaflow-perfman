@@ -44,13 +44,6 @@ func ProcessMetrics(prometheusAPI v1.API, metric string, metricObjects []metrics
 
 	for _, obj := range metricObjects {
 		if err := func() error {
-			// Create a CSV file that will contain the Prometheus data
-			dumpFile, err := createDumpFilePath(dataDir, metric, obj.Filename, timePeriod)
-			if err != nil {
-				return fmt.Errorf("error creating dump file path: %w", err)
-			}
-			defer dumpFile.Close()
-
 			result, warnings, err := prometheusAPI.QueryRange(context.TODO(), obj.Query, queryRange)
 			if err != nil {
 				return fmt.Errorf("error querying Prometheus: %w", err)
@@ -63,6 +56,13 @@ func ProcessMetrics(prometheusAPI v1.API, metric string, metricObjects []metrics
 			}
 
 			matrix := result.(model.Matrix)
+
+			// Create a CSV file that will contain the Prometheus data
+			dumpFile, err := createDumpFilePath(dataDir, metric, obj.Filename, timePeriod)
+			if err != nil {
+				return fmt.Errorf("error creating dump file path: %w", err)
+			}
+			defer dumpFile.Close()
 
 			// Write the columns of the CSV file
 			if _, err := fmt.Fprintf(dumpFile, "%s, %s, %s\n", obj.XAxis, obj.YAxis, strings.Join(obj.Labels, ", ")); err != nil {
