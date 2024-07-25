@@ -81,13 +81,15 @@ func TestWriteToDumpFile(t *testing.T) {
 		t.Fatalf("failed to create in-memory file: %v", err)
 	}
 
+	defer func() {
+		if closeErr := f.Close(); closeErr != nil {
+			t.Fatalf("failed to close in-memory file: %v", err)
+		}
+	}()
+
 	err = writeToDumpFile(f, testMetricObject, testMatrix)
 	if err != nil {
 		t.Fatalf("failed to write to in-memory file: %v", err)
-	}
-
-	if err := f.Close(); err != nil {
-		t.Fatalf("failed to close in-memory file: %v", err)
 	}
 
 	fileContent, err := afero.ReadFile(appFS, "test.csv")
