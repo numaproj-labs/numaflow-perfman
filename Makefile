@@ -12,6 +12,11 @@ lint: $(GOPATH)/bin/golangci-lint
 	go mod tidy
 	golangci-lint run --fix --verbose --concurrency 4 --timeout 5m --enable goimports
 
+.PHONY: test
+
+test:
+	@go test ./...
+
 .PHONY: clean
 clean:
 	-rm -f perfman
