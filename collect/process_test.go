@@ -74,9 +74,9 @@ var (
 var testMatrix model.Matrix = []*model.SampleStream{&testSampleStream1, &testSampleStream2, &testSampleStream3}
 
 func TestWriteToDumpFile(t *testing.T) {
-	appFS := afero.NewMemMapFs()
+	memMapFS := afero.NewMemMapFs()
 
-	f, err := appFS.Create("test.csv")
+	f, err := memMapFS.Create("test.csv")
 	if err != nil {
 		t.Fatalf("failed to create in-memory file: %v", err)
 	}
@@ -92,7 +92,7 @@ func TestWriteToDumpFile(t *testing.T) {
 		t.Fatalf("failed to write to in-memory file: %v", err)
 	}
 
-	fileContent, err := afero.ReadFile(appFS, "test.csv")
+	fileContent, err := afero.ReadFile(memMapFS, "test.csv")
 	if err != nil {
 		t.Fatalf("failed to read in-memory file: %v", err)
 	}
