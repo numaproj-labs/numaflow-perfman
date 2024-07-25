@@ -94,7 +94,6 @@ func ProcessMetrics(prometheusAPI v1.API, metric string, metricObjects []metrics
 			return fmt.Errorf("error when processing metric object: %w", err)
 		}
 
-		// https://www.joeshaw.org/dont-defer-close-on-writable-files/
 		if err = dumpFile.Close(); err != nil {
 			return fmt.Errorf("error closing dump file: %w", err)
 		}

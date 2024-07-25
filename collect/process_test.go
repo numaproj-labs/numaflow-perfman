@@ -83,7 +83,7 @@ func TestWriteToDumpFile(t *testing.T) {
 
 	defer func() {
 		if closeErr := f.Close(); closeErr != nil {
-			t.Fatalf("failed to close in-memory file: %v", err)
+			t.Fatalf("failed to close in-memory file: %v", closeErr)
 		}
 	}()
 
