@@ -96,7 +96,6 @@ var testMatrix2 model.Matrix = []*model.SampleStream{&testSampleStream4}
 func TestWriteToDumpFile(t *testing.T) {
 	tests := []struct {
 		name                string
-		filename            string
 		metricObject        metrics.MetricObject
 		matrix              model.Matrix
 		expectedFileContent string
@@ -105,7 +104,6 @@ func TestWriteToDumpFile(t *testing.T) {
 	}{
 		{
 			name:         "successfully create CSV file",
-			filename:     "test1.csv",
 			metricObject: testMetricObject,
 			matrix:       testMatrix1,
 			expectedFileContent: `unix_timestamp, bytes, pod, replica, vertex_type
@@ -118,7 +116,6 @@ func TestWriteToDumpFile(t *testing.T) {
 		},
 		{
 			name:         "missing key in label set",
-			filename:     "test2.csv",
 			metricObject: testMetricObject,
 			matrix:       testMatrix2,
 			wantErr:      true,
@@ -128,7 +125,7 @@ func TestWriteToDumpFile(t *testing.T) {
 	memMapFS := afero.NewMemMapFs()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			f, err := memMapFS.Create(tt.filename)
+			f, err := memMapFS.Create("test.csv")
 			if err != nil {
 				t.Fatalf("failed to create in-memory file: %v", err)
 			}
@@ -139,7 +136,7 @@ func TestWriteToDumpFile(t *testing.T) {
 			}()
 			writeErr := writeToDumpFile(f, tt.metricObject, tt.matrix)
 
-			fileContent, err := afero.ReadFile(memMapFS, tt.filename)
+			fileContent, err := afero.ReadFile(memMapFS, "test.csv")
 			if err != nil {
 				t.Fatalf("failed to read in-memory file: %v", err)
 			}
