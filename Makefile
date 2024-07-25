@@ -14,4 +14,8 @@ lint: $(GOPATH)/bin/golangci-lint
 
 .PHONY: clean
 clean:
-	-rm perfman
+	-rm -f perfman
+
+.PHONY: clean-output
+clean-output:
+	-rm -rf output
