@@ -11,4 +11,8 @@ var MetricGroups = map[string][]MetricObject{
 		ForwarderProcessingTimeP95,
 		ForwarderProcessingTimeP99,
 	},
+	"resources": {
+		Memory,
+		CPU,
+	},
 }
