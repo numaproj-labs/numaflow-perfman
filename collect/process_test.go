@@ -5,12 +5,101 @@ import (
 
 	"github.com/prometheus/common/model"
 	"github.com/spf13/afero"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/numaproj-labs/numaflow-perfman/metrics"
 )
 
-var mockSampleStream1 = model.SampleStream{}
+var testMetricObject = metrics.MetricObject{
+	XAxis:  "unix_timestamp",
+	YAxis:  "bytes",
+	Labels: []string{"pod", "replica", "vertex_type"},
+}
 
-var mockMatrix model.Matrix = []*model.SampleStream{&mockSampleStream1}
+var (
+	labelSet1 = map[model.LabelName]model.LabelValue{
+		"pod":         "test-pod-input",
+		"replica":     "0",
+		"vertex_type": "Source",
+	}
+	samplePair1 = []model.SamplePair{
+		{
+			Timestamp: 123,
+			Value:     1,
+		},
+	}
+
+	testSampleStream1 = model.SampleStream{
+		Metric: labelSet1,
+		Values: samplePair1,
+	}
+)
+
+var (
+	labelSet2 = map[model.LabelName]model.LabelValue{
+		"pod":         "test-pod-map",
+		"replica":     "0",
+		"vertex_type": "MapUDF",
+	}
+	samplePair2 = []model.SamplePair{
+		{
+			Timestamp: 345,
+			Value:     2,
+		},
+	}
+	testSampleStream2 = model.SampleStream{
+		Metric: labelSet2,
+		Values: samplePair2,
+	}
+)
+
+var (
+	labelSet3 = map[model.LabelName]model.LabelValue{
+		"pod":         "test-pod-output",
+		"replica":     "0",
+		"vertex_type": "Sink",
+	}
+	samplePair3 = []model.SamplePair{
+		{
+			Timestamp: 678,
+			Value:     3,
+		},
+	}
+	testSampleStream3 = model.SampleStream{
+		Metric: labelSet3,
+		Values: samplePair3,
+	}
+)
+
+var testMatrix model.Matrix = []*model.SampleStream{&testSampleStream1, &testSampleStream2, &testSampleStream3}
 
 func TestWriteToDumpFile(t *testing.T) {
 	appFS := afero.NewMemMapFs()
+
+	f, err := appFS.Create("test.csv")
+	if err != nil {
+		t.Fatalf("failed to create in-memory file: %v", err)
+	}
+
+	err = writeToDumpFile(f, testMetricObject, testMatrix)
+	if err != nil {
+		t.Fatalf("failed to write to in-memory file: %v", err)
+	}
+
+	if err := f.Close(); err != nil {
+		t.Fatalf("failed to close in-memory file: %v", err)
+	}
+
+	fileContent, err := afero.ReadFile(appFS, "test.csv")
+	if err != nil {
+		t.Fatalf("failed to read in-memory file: %v", err)
+	}
+
+	expectedContent := `unix_timestamp, bytes, pod, replica, vertex_type
+0.123, 1, test-pod-input, 0, Source
+0.345, 2, test-pod-map, 0, MapUDF
+0.678, 3, test-pod-output, 0, Sink
+`
+
+	assert.Equal(t, expectedContent, string(fileContent))
 }

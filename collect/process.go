@@ -3,6 +3,7 @@ package collect
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -27,7 +28,7 @@ func createDumpFilePath(dataDir string, metric string, filename string, timePeri
 	return f, nil
 }
 
-func writeToDumpFile(dumpFile *os.File, metricObject metrics.MetricObject, matrix model.Matrix) error {
+func writeToDumpFile(dumpFile io.Writer, metricObject metrics.MetricObject, matrix model.Matrix) error {
 	// Write the columns of the CSV file
 	if _, err := fmt.Fprintf(dumpFile, "%s, %s, %s\n", metricObject.XAxis, metricObject.YAxis, strings.Join(metricObject.Labels, ", ")); err != nil {
 		return fmt.Errorf("failed to write to file: %w", err)
