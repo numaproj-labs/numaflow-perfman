@@ -13,7 +13,6 @@ lint: $(GOPATH)/bin/golangci-lint
 	golangci-lint run --fix --verbose --concurrency 4 --timeout 5m --enable goimports
 
 .PHONY: test
-
 test:
 	@go test ./...
 
