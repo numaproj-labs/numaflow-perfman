@@ -1,6 +1,7 @@
 package collect
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/prometheus/common/model"
@@ -71,37 +72,84 @@ var (
 	}
 )
 
-var testMatrix model.Matrix = []*model.SampleStream{&testSampleStream1, &testSampleStream2, &testSampleStream3}
+var (
+	labelSet4 = map[model.LabelName]model.LabelValue{
+		"replica":     "0",
+		"vertex":      "output",
+		"vertex_type": "Sink",
+	}
+	samplePair4 = []model.SamplePair{
+		{
+			Timestamp: 7890,
+			Value:     3,
+		},
+	}
+	testSampleStream4 = model.SampleStream{
+		Metric: labelSet4,
+		Values: samplePair4,
+	}
+)
+
+var testMatrix1 model.Matrix = []*model.SampleStream{&testSampleStream1, &testSampleStream2, &testSampleStream3}
+var testMatrix2 model.Matrix = []*model.SampleStream{&testSampleStream4}
 
 func TestWriteToDumpFile(t *testing.T) {
-	memMapFS := afero.NewMemMapFs()
-
-	f, err := memMapFS.Create("test.csv")
-	if err != nil {
-		t.Fatalf("failed to create in-memory file: %v", err)
-	}
-
-	defer func() {
-		if closeErr := f.Close(); closeErr != nil {
-			t.Fatalf("failed to close in-memory file: %v", closeErr)
-		}
-	}()
-
-	err = writeToDumpFile(f, testMetricObject, testMatrix)
-	if err != nil {
-		t.Fatalf("failed to write to in-memory file: %v", err)
-	}
-
-	fileContent, err := afero.ReadFile(memMapFS, "test.csv")
-	if err != nil {
-		t.Fatalf("failed to read in-memory file: %v", err)
-	}
-
-	expectedContent := `unix_timestamp, bytes, pod, replica, vertex_type
+	tests := []struct {
+		name                string
+		filename            string
+		metricObject        metrics.MetricObject
+		matrix              model.Matrix
+		expectedFileContent string
+		wantErr             bool
+		errMessage          string
+	}{
+		{
+			name:         "successfully create CSV file",
+			filename:     "test1.csv",
+			metricObject: testMetricObject,
+			matrix:       testMatrix1,
+			expectedFileContent: `unix_timestamp, bytes, pod, replica, vertex_type
 1.23, 1, test-pod-input, 0, Source
 4.56, 2, test-pod-map, 0, MapUDF
 7.89, 3, test-pod-output, 0, Sink
-`
+`,
+			wantErr:    false,
+			errMessage: "",
+		},
+		{
+			name:         "missing key in label set",
+			filename:     "test2.csv",
+			metricObject: testMetricObject,
+			matrix:       testMatrix2,
+			wantErr:      true,
+			errMessage:   "label pod does not exist in the Metric map",
+		},
+	}
+	memMapFS := afero.NewMemMapFs()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f, err := memMapFS.Create(tt.filename)
+			if err != nil {
+				t.Fatalf("failed to create in-memory file: %v", err)
+			}
+			defer func() {
+				if closeErr := f.Close(); closeErr != nil {
+					t.Fatalf("failed to close in-memory file: %v", closeErr)
+				}
+			}()
+			writeErr := writeToDumpFile(f, tt.metricObject, tt.matrix)
 
-	assert.Equal(t, expectedContent, string(fileContent))
+			fileContent, err := afero.ReadFile(memMapFS, tt.filename)
+			if err != nil {
+				t.Fatalf("failed to read in-memory file: %v", err)
+			}
+			if tt.wantErr {
+				assert.Error(t, writeErr, "Expected error")
+				assert.True(t, strings.Contains(writeErr.Error(), tt.errMessage))
+			} else {
+				assert.NoError(t, writeErr, "Expected no error")
+				assert.Equal(t, tt.expectedFileContent, string(fileContent))
+			}
+		})
+	}
 }

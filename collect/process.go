@@ -39,7 +39,11 @@ func writeToDumpFile(dumpFile io.Writer, metricObject metrics.MetricObject, matr
 			format := "%v, %v, " + strings.Repeat("%s, ", len(metricObject.Labels)-1) + "%s\n"
 			args := []interface{}{sp.Timestamp, sp.Value}
 			for _, label := range metricObject.Labels {
-				args = append(args, ss.Metric[model.LabelName(label)])
+				value, ok := ss.Metric[model.LabelName(label)]
+				if !ok {
+					return fmt.Errorf("label %s does not exist in the Metric map", label)
+				}
+				args = append(args, value)
 			}
 
 			// With each iteration over the result matrix, write one row of values
