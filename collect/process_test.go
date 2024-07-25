@@ -24,7 +24,7 @@ var (
 	}
 	samplePair1 = []model.SamplePair{
 		{
-			Timestamp: 123,
+			Timestamp: 1230,
 			Value:     1,
 		},
 	}
@@ -43,7 +43,7 @@ var (
 	}
 	samplePair2 = []model.SamplePair{
 		{
-			Timestamp: 345,
+			Timestamp: 4560,
 			Value:     2,
 		},
 	}
@@ -61,7 +61,7 @@ var (
 	}
 	samplePair3 = []model.SamplePair{
 		{
-			Timestamp: 678,
+			Timestamp: 7890,
 			Value:     3,
 		},
 	}
@@ -98,9 +98,9 @@ func TestWriteToDumpFile(t *testing.T) {
 	}
 
 	expectedContent := `unix_timestamp, bytes, pod, replica, vertex_type
-0.123, 1, test-pod-input, 0, Source
-0.345, 2, test-pod-map, 0, MapUDF
-0.678, 3, test-pod-output, 0, Sink
+1.23, 1, test-pod-input, 0, Source
+4.56, 2, test-pod-map, 0, MapUDF
+7.89, 3, test-pod-output, 0, Sink
 `
 
 	assert.Equal(t, expectedContent, string(fileContent))
