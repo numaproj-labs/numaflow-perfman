@@ -1,0 +1,16 @@
+timestamp,name,counter,vertex,vertex_type,pipeline,replica
+1723437880,forwarder_read_total,1740540,p1,MapUDF,perfman-base-pipeline,0
+1723437880,forwarder_read_total,1740540,input,Source,perfman-base-pipeline,0
+1723437880,forwarder_read_total,1740540,output,Sink,perfman-base-pipeline,0
+1723437890,forwarder_read_total,1740590,input,Source,perfman-base-pipeline,0
+1723437890,forwarder_read_total,1740590,output,Sink,perfman-base-pipeline,0
+1723437890,forwarder_read_total,1740590,p1,MapUDF,perfman-base-pipeline,0
+1723437900,forwarder_read_total,1740640,output,Sink,perfman-base-pipeline,0
+1723437900,forwarder_read_total,1740640,p1,MapUDF,perfman-base-pipeline,0
+1723437900,forwarder_read_total,1740640,input,Source,perfman-base-pipeline,0
+1723437910,forwarder_read_total,1740690,p1,MapUDF,perfman-base-pipeline,0
+1723437910,forwarder_read_total,1740690,input,Source,perfman-base-pipeline,0
+1723437910,forwarder_read_total,1740690,output,Sink,perfman-base-pipeline,0
+1723437920,forwarder_read_total,1740735,p1,MapUDF,perfman-base-pipeline,0
+1723437920,forwarder_read_total,1740735,output,Sink,perfman-base-pipeline,0
+1723437920,forwarder_read_total,1740735,input,Source,perfman-base-pipeline,0

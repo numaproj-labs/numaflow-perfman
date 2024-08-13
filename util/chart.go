@@ -57,15 +57,15 @@ func createNamespace(kubeClient *kubernetes.Clientset, namespace string, nso *v1
 }
 
 func (cr *ChartRelease) InstallOrUpgradeRelease(kubeClient *kubernetes.Clientset, log *zap.Logger) error {
-	namespaceObject := &v1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: cr.Namespace,
-		},
-	}
+	//namespaceObject := &v1.Namespace{
+	//	ObjectMeta: metav1.ObjectMeta{
+	//		Name: cr.Namespace,
+	//	},
+	//}
 
-	if err := createNamespace(kubeClient, cr.Namespace, namespaceObject, log); err != nil {
-		return err
-	}
+	//if err := createNamespace(kubeClient, cr.Namespace, namespaceObject, log); err != nil {
+	//	return err
+	//}
 
 	if err := actionConfig.Init(settings.RESTClientGetter(), cr.Namespace, os.Getenv("HELM_DRIVER"), logger.Printf); err != nil {
 		return fmt.Errorf("failed to initialize actionConfig: %w", err)

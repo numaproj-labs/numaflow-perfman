@@ -1,0 +1,41 @@
+config:
+  agent:
+    interval: "10s"
+
+  outputs:
+    - file:
+        files:
+          - "/tmp/metrics3-filter3.csv"
+        data_format: "csv"
+        csv_columns: ["timestamp", "name", "field.counter", "tag.vertex", "tag.vertex_type", "tag.pipeline", "tag.replica"]
+        csv_header: true
+
+  inputs:
+    - prometheus:
+        urls:
+          - "https://10.42.0.157:2469/metrics"
+          - "https://10.42.0.158:2469/metrics"
+          - "https://10.42.0.159:2469/metrics"
+        insecure_skip_verify: true
+
+  processors:
+    - starlark:
+        source: |
+          def apply(metric):
+              include_metrics = ["forwarder_read_total"]
+              if metric.name in include_metrics:
+                  return metric
+              return None
+
+# mimic rate function
+#  aggregators:
+#    - derivative:
+#        namepass: ["forwarder_read_total"]
+#        suffix: "_rate"
+#        period: "10s"
+#        max_roll_over: 10
+
+
+service:
+  enabled: false
+

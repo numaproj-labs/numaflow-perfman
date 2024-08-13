@@ -1,0 +1,16 @@
+config:
+  agent:
+    interval: "10s"
+
+  outputs:
+    - file:
+        files:
+          - "/tmp/metrics.out"
+        data_format: "influx"
+
+  inputs:
+    - prometheus:
+        urls: ["http://perfman-kube-prometheus-prometheus:9090/metrics"]
+
+service:
+  enabled: false

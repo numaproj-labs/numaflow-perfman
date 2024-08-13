@@ -1,0 +1,19 @@
+# this should theoretically, allow outgoing TCP traffic on port 9090 to pods that have the label k8s-prometheus,
+# we also assume that the addon-metricset-ns namespace allows traffic from our namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-prometheus-access
+spec:
+  podSelector: {}
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: addon-metricset-ns
+          podSelector:
+            matchLabels:
+              prometheus: k8s-prometheus
+      ports:
+        - protocol: TCP
+          port: 9090

@@ -1,0 +1,28 @@
+config:
+  agent:
+    interval: "10s"
+
+  outputs:
+    - file:
+        files:
+          - "/tmp/metrics2.out"
+        data_format: "influx"
+
+  inputs:
+    - prometheus:
+        monitor_kubernetes_pods: true
+        monitor_kubernetes_pods_method: "settings+annotations"
+        monitor_kubernetes_pods_scheme: "https"
+        monitor_kubernetes_pods_port: 2469
+        monitor_kubernetes_pods_path: "/metrics"
+        insecure_skip_verify: true
+
+service:
+  enabled: false
+
+# with this method we still do not have sufficient RBAC permissions, as telegraf is not deployed at the cluster scope
+# thus it cannot list pods, hence we get the following error:
+#Using the label selector:  and field selector:
+#W0811 21:07:43.559200       1 reflector.go:547] pkg/mod/k8s.io/client-go@v0.30.1/tools/cache/reflector.go:232: failed to list *v1.Pod: pods is forbidden: User "system:serviceaccount:default:telegraf" cannot list resource "pods" in API group "" at the cluster scope
+#E0811 21:07:43.559290       1 reflector.go:150] pkg/mod/k8s.io/client-go@v0.30.1/tools/cache/reflector.go:232: Failed to watch *v1.Pod: failed to list *v1.Pod: pods is forbidden: User "system:serviceaccount:default:telegraf" cannot list resource "pods" in API group "" at the cluster scope
+# we would need to create a cluster role for telegraf to address this
