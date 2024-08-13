@@ -14,7 +14,8 @@ const (
 const (
 	GrafanaPassword         = "admin"
 	GrafanaURL              = "http://localhost:3000"
-	PrometheusURL           = "http://localhost:9090"
+	LocalPrometheusURL      = "http://localhost:9090"
+	IKSPrometheusURL        = "http://thanos.addon-metricset-ns.svc.cluster.local:9090/"
 	GrafanaReleaseName      = "perfman-grafana"
 	PrometheusReleaseName   = "perfman-kube-prometheus"
 	PrometheusPFServiceName = "perfman-kube-prometheus-prometheus" // Prometheus service name to use for port forwarding
