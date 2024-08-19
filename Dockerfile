@@ -16,8 +16,7 @@ ENV UID=10001
 # on containers run with root by default
 RUN adduser \
     --disabled-password \
-    --home "/perfmanuser" \
-    --no-create-home \
+    --home "/home/${USER}" \
     --uid "${UID}" \
     "${USER}"
 
