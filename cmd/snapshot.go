@@ -18,7 +18,7 @@ var snapshotCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// TODO: can all be moved to viper configuration
 		grafanaURL := util.GrafanaURL
-		filePath := "./config/dashboard-template.json" // the path to config dashboard template file.
+		filePath := "./config/dashboard-template.json" // the path to default dashboard template file.
 		username := "admin"
 		password := util.GrafanaPassword
 
