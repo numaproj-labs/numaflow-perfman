@@ -41,7 +41,7 @@ var collectCmd = &cobra.Command{
 		}
 
 		client, err := api.NewClient(api.Config{
-			Address: util.IKSPrometheusURL,
+			Address: util.LocalPrometheusURL,
 		})
 		if err != nil {
 			return fmt.Errorf("error creating client: %w", err)

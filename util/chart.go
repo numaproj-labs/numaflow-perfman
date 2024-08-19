@@ -46,7 +46,7 @@ func getChart(chartPathOption action.ChartPathOptions, chartName string, setting
 
 func createNamespace(kubeClient *kubernetes.Clientset, nso *v1.Namespace) error {
 	_, err := kubeClient.CoreV1().Namespaces().Create(context.TODO(), nso, metav1.CreateOptions{})
-	if kerrors.IsForbidden(err) || kerrors.IsAlreadyExists(err) {
+	if kerrors.IsAlreadyExists(err) {
 		return nil
 	} else if err != nil {
 		return fmt.Errorf("failed to create namespace: %w", err)

@@ -1,8 +1,31 @@
 COMMIT_SHA=$(shell git rev-parse HEAD)
+TAG ?= stable
+PUSH ?= false
+IMAGE_REGISTRY ?= quay.io/numaio/numaproj-labs/perfman:${TAG}
 
-.PHONY: build
+# Builds only for current platform
 build:
-	CGO_ENABLED=0 GOARCH=amd64 go build -ldflags "-X github.com/numaproj-labs/numaflow-perfman/util.CommitSHA=$(COMMIT_SHA)" -v -o perfman main.go
+	CGO_ENABLED=0 go build -ldflags "-X github.com/numaproj-labs/numaflow-perfman/util.CommitSHA=$(COMMIT_SHA)" -v -o dist/perfman main.go
+
+.PHONY: image-push
+image-push:
+	docker buildx build -t ${IMAGE_REGISTRY} --build-arg COMMIT_SHA=$(COMMIT_SHA) --platform linux/amd64,linux/arm64 --target perfman . --push
+
+.PHONY: image
+image:
+	docker build -t ${IMAGE_REGISTRY} --build-arg COMMIT_SHA=$(COMMIT_SHA) --target perfman .
+	@if [ "$(PUSH)" = "true" ]; then docker push ${IMAGE_REGISTRY}; fi
+
+# If you use this session to port-forward, since this is a blocking operation, the terminal of the container will not
+# be able to be used for further commands. Thus, in a new terminal tab run docker ps and get the name/ID of the
+# existing container, then run: docker exec -it <name/ID> /bin/ash. This will provide a new terminal
+# session inside the same container, where you can run additional commands
+.PHONY: run
+run:
+	mkdir -p output
+	docker run -it --network host \
+ 	-v ~/.kube/config:/perfmanuser/.kube/config:ro \
+ 	-v ./output:/home/perfman/output ${IMAGE_REGISTRY}
 
 $(GOPATH)/bin/golangci-lint:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b `go env GOPATH`/bin v1.54.1
@@ -18,5 +41,5 @@ test:
 
 .PHONY: clean
 clean:
-	-rm -f perfman
+	-rm -rf dist
 	-rm -rf output

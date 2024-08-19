@@ -21,7 +21,7 @@ var pipelineCmd = &cobra.Command{
 	Short: "Apply the base perfman pipeline",
 	Long:  "Apply the base perfman pipeline",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if err := util.CreateResource("default/pipeline.yaml", dynamicClient, pipelineGvr, util.PerfmanNamespace, log); err != nil {
+		if err := util.CreateResource("./config/numaflow/pipeline.yaml", dynamicClient, pipelineGvr, util.PerfmanNamespace, log); err != nil {
 			return fmt.Errorf("failed to apply base pipeline: %w", err)
 		}
 
