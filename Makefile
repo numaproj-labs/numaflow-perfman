@@ -16,10 +16,6 @@ image:
 	docker build -t ${IMAGE_REGISTRY} --build-arg COMMIT_SHA=$(COMMIT_SHA) --target perfman .
 	@if [ "$(PUSH)" = "true" ]; then docker push ${IMAGE_REGISTRY}; fi
 
-# If you use this session to port-forward, since this is a blocking operation, the terminal of the container will not
-# be able to be used for further commands. Thus, in a new terminal tab run docker ps and get the name/ID of the
-# existing container, then run: docker exec -it <name/ID> /bin/ash. This will provide a new terminal
-# session inside the same container, where you can run additional commands
 .PHONY: run
 run:
 	mkdir -p output
