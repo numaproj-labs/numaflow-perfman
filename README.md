@@ -27,7 +27,7 @@ accomplished with `make run`). This assumes that the local kubernetes configurat
 Note: As above, port-forwarding is a blocking operation, and with the Docker option, open a new terminal tab and:
 - Identify the name/ID of the currently running perfman container with `docker ps`
 - Run `docker exec -it <name/ID> /bin/ash`. This will provide a new terminal session inside the same container, 
-where you can run additional commands.
+where you can run additional commands
 
 ## Collecting Metrics
 
