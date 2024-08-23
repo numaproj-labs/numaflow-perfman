@@ -46,7 +46,7 @@ var setupCmd = &cobra.Command{
 		if cmd.Flag("numaflow").Changed {
 			numaflowChart := util.ChartRelease{
 				ChartName:   "numaflow",
-				ReleaseName: "perfman-numaflow",
+				ReleaseName: "numaflow",
 				RepoUrl:     "https://numaproj.io/helm-charts",
 				Namespace:   util.NumaflowNamespace,
 				Values:      nil,
@@ -58,7 +58,7 @@ var setupCmd = &cobra.Command{
 
 		// Optionally install ISB service
 		if cmd.Flag("jetstream").Changed {
-			if err := util.CreateResource("default/isbvc.yaml", dynamicClient, isbGvr, util.PerfmanNamespace, log); err != nil {
+			if err := util.CreateResource("./config/numaflow/isbvc.yaml", dynamicClient, isbGvr, util.PerfmanNamespace, log); err != nil {
 				return fmt.Errorf("failed to create jetsream-isbvc: %w", err)
 			}
 		}
@@ -94,11 +94,11 @@ var setupCmd = &cobra.Command{
 		}
 
 		// Install metrics service monitors
-		if err := util.CreateResource("default/pipeline-metrics.yaml", dynamicClient, svGvr, util.PerfmanNamespace, log); err != nil {
+		if err := util.CreateResource("./config/numaflow/pipeline-metrics.yaml", dynamicClient, svGvr, util.PerfmanNamespace, log); err != nil {
 			return fmt.Errorf("failed to create service monitor for pipeline metrics: %w", err)
 		}
 
-		if err := util.CreateResource("default/isbvc-jetstream-metrics.yaml", dynamicClient, svGvr, util.PerfmanNamespace, log); err != nil {
+		if err := util.CreateResource("./config/numaflow/isbvc-jetstream-metrics.yaml", dynamicClient, svGvr, util.PerfmanNamespace, log); err != nil {
 			return fmt.Errorf("failed to create service monitor for jetstream metrics: %w", err)
 		}
 

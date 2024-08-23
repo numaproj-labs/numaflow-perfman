@@ -15,7 +15,7 @@ func (o *Options) Step() time.Duration {
 	return o.step
 }
 
-// DefaultOptions returns the default options.
+// DefaultOptions returns the default options
 func DefaultOptions() *Options {
 	return &Options{
 		step: util.Step,
