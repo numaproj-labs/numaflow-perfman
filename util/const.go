@@ -17,8 +17,8 @@ const (
 	LocalPrometheusURL      = "http://localhost:9090"
 	GrafanaReleaseName      = "perfman-grafana"
 	PrometheusReleaseName   = "perfman-kube-prometheus"
-	PrometheusPFServiceName = "perfman-kube-prometheus-ku-prometheus" // Prometheus service name; must match kube-prometheus-stack 
-	GrafanaPFServiceName    = "perfman-grafana"                    // Grafana service name to use for port forwarding
+	PrometheusPFServiceName = "perfman-kube-prometheus-ku-prometheus" // Prometheus service name; must match kube-prometheus-stack
+	GrafanaPFServiceName    = "perfman-grafana"                       // Grafana service name to use for port forwarding
 
 	// RateInterval is used to determine over what period the rate function is computed.
 	// It should typically be at least 4-5 times the scrape interval,

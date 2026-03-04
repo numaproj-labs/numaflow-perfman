@@ -42,7 +42,7 @@ var (
 	}
 )
 
-// Latency metrics. 
+// Latency metrics.
 var (
 	ForwarderProcessingTimeP90 = MetricObject{
 		Query:    fmt.Sprintf(`histogram_quantile(0.9, rate(forwarder_processing_time_bucket{pipeline="perfman-base-pipeline"}[%dm%ds])) / 1000000`, minutes, seconds),
