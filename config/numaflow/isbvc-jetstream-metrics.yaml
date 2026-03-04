@@ -3,7 +3,7 @@ kind: ServiceMonitor
 metadata:
   labels:
     app.kubernetes.io/part-of: perfman
-    release: perfman-kube-prometheus
+    release: perfman-kube-prometheus # so Prometheus from kube-prometheus-stack selects this ServiceMonitor
   name: perfman-numaflow-isbsvc-jetstream-metrics
 spec:
   endpoints:
