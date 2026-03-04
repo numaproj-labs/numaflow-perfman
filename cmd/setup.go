@@ -81,13 +81,19 @@ var setupCmd = &cobra.Command{
 			}
 		}
 
-		// Install Prometheus Operator
+		// Install Prometheus Operator via prometheus-community stack (multi-arch images)
+		// grafana.enabled: false — we install Grafana separately (--grafana) as "perfman-grafana"; the stack's bundled Grafana would conflict and use a different service name.
 		kubePrometheusChart := util.ChartRelease{
-			ChartName:   "kube-prometheus",
+			ChartName:   "kube-prometheus-stack",
 			ReleaseName: util.PrometheusReleaseName,
-			RepoUrl:     "https://charts.bitnami.com/bitnami",
+			RepoUrl:     "https://prometheus-community.github.io/helm-charts",
 			Namespace:   util.PerfmanNamespace,
-			Values:      nil,
+			Version:     "", // empty = latest from repo (HTTPS index)
+			Values: map[string]interface{}{
+				"grafana": map[string]interface{}{
+					"enabled": false,
+				},
+			},
 		}
 		if err := kubePrometheusChart.InstallOrUpgradeRelease(kubeClient, log); err != nil {
 			return fmt.Errorf("failed to install prometheus operator: %w", err)

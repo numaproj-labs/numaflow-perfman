@@ -41,9 +41,18 @@ NATS Jetsream ISB running on the cluster
 2. In a separate terminal, port-forward the Prometheus service to `localhost:9090` with `./dist/perfman portforward -p`
 3. Deploy the perfman base pipeline: `./dist/perfman pipeline`. Allow `n` minutes to pass in order for metrics to be
 collected for your desired length of time
-4. Collect metrics with: `./dist/perfman -n=<dir-name> -l=<time-period> -m=<metric-group>`. `dir-name`
+4. Collect metrics with: `./dist/perfman collect -n=<dir-name> -l=<time-period> -m=<metric-group>`. `dir-name`
 corresponds to the name of the subdirectory that will be created under `output/`, where each file in this subdirectory
 will be a CSV file with data pertaining to the metrics associated with the specified metric group. `time-period` is
 the amount of time you would like to look back from the current time for the metric collection, and must be less than or
-equal to `n` in step 4. `metric-group` is the metric group to use. The metrics corresponding to a
+equal to `n` in step 3. `metric-group` is the metric group to use. The metrics corresponding to a
 metric group can be found in `metrics/metric_groups.go`
+
+## Grafana dashboard
+
+You can view and share pipeline metrics in a Grafana dashboard.
+
+1. **Install Grafana** when running setup: `./dist/perfman setup -g` (or add `-g` to your existing setup command).
+2. **Port-forward Grafana** (in a separate terminal): `./dist/perfman portforward -g`. The UI is at **http://localhost:3000** (default login: `admin` / `admin`).
+3. **Use the dashboard**: With Prometheus also port-forwarded (`./dist/perfman portforward -p`), open Grafana and use the dropdowns at the top to pick **namespace**, **pipeline**, and **vertex**. The dashboard shows throughput, latency, and other Numaflow metrics from Prometheus.
+4. **Share a snapshot**: Run `./dist/perfman snapshot`. It creates a Prometheus data source in Grafana, uploads the perfman dashboard template, and generates a **snapshot URL**. Open that URL (on the same Grafana instance) to view a frozen view of the dashboard. For the snapshot to show data, set the dashboard time range to **absolute** (e.g. the run window) before running snapshot, or open the snapshot URL soon after creating it so the relative time range still has data.
