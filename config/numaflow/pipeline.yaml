@@ -35,8 +35,8 @@ spec:
             cpu: 1000m
             memory: 4Gi
       udf:
-        builtin:
-          name: cat
+        container:
+          image: quay.io/numaio/numaflow-go/map-cat:stable
     - name: output
       scale:
         min: 1
