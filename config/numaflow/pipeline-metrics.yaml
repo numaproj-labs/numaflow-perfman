@@ -1,16 +1,18 @@
+# PodMonitor so Prometheus (kube-prometheus-stack) scrapes pipeline vertex pod metrics.
+# Scrapes all containers with a port named "metrics" (platform + user-defined), not just Service ports.
 apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
+kind: PodMonitor
 metadata:
   labels:
     app.kubernetes.io/part-of: perfman
-    release: perfman-kube-prometheus   # so Prometheus from kube-prometheus-stack selects this ServiceMonitor
+    release: perfman-kube-prometheus
   name: perfman-numaflow-pipeline-metrics
 spec:
-  endpoints:
-    - scheme: https
+  podMetricsEndpoints:
+    - path: /metrics
       port: metrics
-      targetPort: 2469
       interval: 15s
+      scheme: https
       tlsConfig:
         insecureSkipVerify: true
   selector:
