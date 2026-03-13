@@ -899,7 +899,7 @@
               "uid": "prometheus-datasource-uid-placeholder"
             },
             "editorMode": "builder",
-            "expr": "histogram_quantile(0.9, rate(forwarder_forward_chunk_processing_time_bucket{namespace=\"$namespace\", pipeline=\"$pipeline\", vertex=\"$vertex\"}[$__rate_interval])) / 1000000",
+            "expr": "histogram_quantile(0.9, rate(forwarder_processing_time_bucket{namespace=\"$namespace\", pipeline=\"$pipeline\", vertex=\"$vertex\"}[$__rate_interval])) / 1000000",
             "legendFormat": "{{le}}",
             "range": true,
             "refId": "A"
@@ -910,7 +910,7 @@
               "uid": "prometheus-datasource-uid-placeholder"
             },
             "editorMode": "builder",
-            "expr": "histogram_quantile(0.95, rate(forwarder_forward_chunk_processing_time_bucket{namespace=\"$namespace\", pipeline=\"$pipeline\", vertex=\"$vertex\"}[$__rate_interval])) / 1000000",
+            "expr": "histogram_quantile(0.95, rate(forwarder_processing_time_bucket{namespace=\"$namespace\", pipeline=\"$pipeline\", vertex=\"$vertex\"}[$__rate_interval])) / 1000000",
             "hide": false,
             "legendFormat": "{{le}}",
             "range": true,
@@ -922,7 +922,7 @@
               "uid": "prometheus-datasource-uid-placeholder"
             },
             "editorMode": "builder",
-            "expr": "histogram_quantile(0.99, rate(forwarder_forward_chunk_processing_time_bucket{namespace=\"$namespace\", pipeline=\"$pipeline\", vertex=\"$vertex\"}[$__rate_interval])) / 1000000",
+            "expr": "histogram_quantile(0.99, rate(forwarder_processing_time_bucket{namespace=\"$namespace\", pipeline=\"$pipeline\", vertex=\"$vertex\"}[$__rate_interval])) / 1000000",
             "hide": false,
             "legendFormat": "{{le}}",
             "range": true,
@@ -967,8 +967,8 @@
         {
           "current": {
             "selected": false,
-            "text": "simple-pipeline",
-            "value": "simple-pipeline"
+            "text": "perfman-base-pipeline",
+            "value": "perfman-base-pipeline"
           },
           "datasource": {
             "type": "prometheus",

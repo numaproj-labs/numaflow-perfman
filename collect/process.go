@@ -37,7 +37,8 @@ func writeToDumpFile(dumpFile io.Writer, metricObject metrics.MetricObject, matr
 	for _, ss := range matrix {
 		for _, sp := range ss.Values {
 			format := "%v, %v, " + strings.Repeat("%s, ", len(metricObject.Labels)-1) + "%s\n"
-			args := []interface{}{sp.Timestamp, sp.Value}
+			// Prometheus model.Time is milliseconds; write unix timestamp in seconds for CSV
+			args := []interface{}{float64(sp.Timestamp) / 1000, sp.Value}
 			for _, label := range metricObject.Labels {
 				value, ok := ss.Metric[model.LabelName(label)]
 				if !ok {
