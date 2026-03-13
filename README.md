@@ -52,7 +52,10 @@ metric group can be found in `metrics/metric_groups.go`
 
 The `dashboard` command imports a Grafana dashboard from a template and optionally creates a shareable snapshot. The repo ships a **pipeline** template; use `--template-path` to load any other dashboard JSON (e.g. MonoVertex or custom) from a file.
 
-**Prerequisites:** Grafana and Prometheus must be reachable. If you use `perfman setup`, install Grafana with the `-g` flag. Port-forward Grafana and Prometheus (e.g. `./dist/perfman portforward -p -g`) so perfman can talk to them.
+**Prerequisites:** Grafana must be reachable.
+
+1. **Install Grafana** when running setup: `./dist/perfman setup -g` (or add `-g` to your existing setup command).
+2. **Port-forward Grafana** (in a separate terminal): `./dist/perfman portforward -g`. The UI is at **http://localhost:3000** (default login: `admin` / `admin`).
 
 **Usage:**
 
@@ -85,10 +88,3 @@ The `dashboard` command imports a Grafana dashboard from a template and optional
 
 - Create a snapshot from a custom template:  
   `./dist/perfman dashboard --template-path ./my-dashboard.json --snapshot`
-
-**Snapshot limitation:** Snapshots created via the CLI may show **empty panels** (no inbound/outbound curves). Grafana’s snapshot API expects the dashboard payload to include pre-run panel data; we only send the dashboard definition (queries), not query results. For a snapshot that includes real data, open the dashboard in Grafana, let it load, then use **Share → Snapshot** in the UI.
-
-**Sharing snapshots externally:** The snapshot URL uses your Grafana base URL (e.g. `http://localhost:3000/...`), so it only works on your machine. To share with others:
-- Expose Grafana at a **public URL** (e.g. [ngrok](https://ngrok.com/) for local: `ngrok http 3000`, or deploy Grafana in a cluster with an ingress).
-- Configure Grafana’s **root_url** to that public URL so generated snapshot links point there.
-- Then the snapshot link from the CLI (or from the UI) will be viewable by anyone with the link.
