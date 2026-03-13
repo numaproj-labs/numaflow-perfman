@@ -24,6 +24,7 @@ type ChartRelease struct {
 	ReleaseName string
 	RepoUrl     string
 	Namespace   string
+	Version     string // optional; if set, Helm uses repo index instead of OCI resolution (avoids nil registry client panic when repo unreachable)
 	Values      map[string]interface{}
 }
 
@@ -72,6 +73,7 @@ func (cr *ChartRelease) InstallOrUpgradeRelease(kubeClient *kubernetes.Clientset
 
 	chartPathOptions := action.ChartPathOptions{
 		RepoURL: cr.RepoUrl,
+		Version: cr.Version,
 	}
 
 	c, err := getChart(chartPathOptions, cr.ChartName, settings)

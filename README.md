@@ -41,11 +41,11 @@ NATS Jetsream ISB running on the cluster
 2. In a separate terminal, port-forward the Prometheus service to `localhost:9090` with `./dist/perfman portforward -p`
 3. Deploy the perfman base pipeline: `./dist/perfman pipeline`. Allow `n` minutes to pass in order for metrics to be
 collected for your desired length of time
-4. Collect metrics with: `./dist/perfman -n=<dir-name> -l=<time-period> -m=<metric-group>`. `dir-name`
+4. Collect metrics with: `./dist/perfman collect -n=<dir-name> -l=<time-period> -m=<metric-group>`. `dir-name`
 corresponds to the name of the subdirectory that will be created under `output/`, where each file in this subdirectory
 will be a CSV file with data pertaining to the metrics associated with the specified metric group. `time-period` is
 the amount of time you would like to look back from the current time for the metric collection, and must be less than or
-equal to `n` in step 4. `metric-group` is the metric group to use. The metrics corresponding to a
+equal to `n` in step 3. `metric-group` is the metric group to use. The metrics corresponding to a
 metric group can be found in `metrics/metric_groups.go`
 
 ## Dashboard

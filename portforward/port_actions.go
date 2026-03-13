@@ -13,6 +13,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/cli-runtime/pkg/genericiooptions"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -69,18 +70,34 @@ func WaitForTermination(stopCh chan struct{}, wg *sync.WaitGroup) {
 	}()
 }
 
-func GetPodFromService(kubeClient *kubernetes.Clientset, namespace string, serviceName string) (string, error) {
+// GetPodFromService returns the name of a pod that backs the given Service.
+// It looks up the service's label selector, lists matching pods, and returns one—preferring Running.
+// Port-forward targets a pod, not a service, so this is used to pick which pod to forward to.
+func GetPodFromService(kubeClient *kubernetes.Clientset, namespace, serviceName string) (string, error) {
+	svc, err := kubeClient.CoreV1().Services(namespace).Get(context.TODO(), serviceName, metav1.GetOptions{})
+	if err != nil {
+		return "", fmt.Errorf("failed to get service %s: %w", serviceName, err)
+	}
+	if len(svc.Spec.Selector) == 0 {
+		return "", fmt.Errorf("service %s has no selector", serviceName)
+	}
+
+	selector := labels.SelectorFromSet(svc.Spec.Selector)
 	pods, err := kubeClient.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: "app.kubernetes.io/instance=" + serviceName,
+		LabelSelector: selector.String(),
 	})
 	if err != nil {
-		return "", fmt.Errorf("failed to fetch pods: %w", err)
+		return "", fmt.Errorf("failed to list pods for service %s: %w", serviceName, err)
 	}
-
 	if len(pods.Items) == 0 {
-		return "", fmt.Errorf("no matching pods found for %s", serviceName)
+		return "", fmt.Errorf("no pods found for service %s", serviceName)
 	}
 
-	firstPod := pods.Items[0].Name
-	return firstPod, nil
+	// Prefer a running pod
+	for i := range pods.Items {
+		if pods.Items[i].Status.Phase == v1.PodRunning {
+			return pods.Items[i].Name, nil
+		}
+	}
+	return pods.Items[0].Name, nil
 }
