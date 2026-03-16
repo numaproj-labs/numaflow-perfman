@@ -103,7 +103,9 @@ var setupCmd = &cobra.Command{
 		if err := util.CreateResource("./config/numaflow/pipeline-metrics.yaml", dynamicClient, svGvr, util.PerfmanNamespace, log); err != nil {
 			return fmt.Errorf("failed to create service monitor for pipeline metrics: %w", err)
 		}
-
+		if err := util.CreateResource("./config/numaflow/monovertex-metrics.yaml", dynamicClient, svGvr, util.PerfmanNamespace, log); err != nil {
+			return fmt.Errorf("failed to create service monitor for monovertex metrics: %w", err)
+		}
 		if err := util.CreateResource("./config/numaflow/isbvc-jetstream-metrics.yaml", dynamicClient, svGvr, util.PerfmanNamespace, log); err != nil {
 			return fmt.Errorf("failed to create service monitor for jetstream metrics: %w", err)
 		}

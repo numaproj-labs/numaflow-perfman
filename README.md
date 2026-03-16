@@ -48,11 +48,43 @@ the amount of time you would like to look back from the current time for the met
 equal to `n` in step 3. `metric-group` is the metric group to use. The metrics corresponding to a
 metric group can be found in `metrics/metric_groups.go`
 
-## Grafana dashboard
+## Dashboard
 
-You can view and share pipeline metrics in a Grafana dashboard.
+The `dashboard` command imports a Grafana dashboard from a template and optionally creates a shareable snapshot. The repo ships a **pipeline** template; use `--template-path` to load any other dashboard JSON (e.g. MonoVertex or custom) from a file.
+
+**Prerequisites:** Grafana must be reachable.
 
 1. **Install Grafana** when running setup: `./dist/perfman setup -g` (or add `-g` to your existing setup command).
 2. **Port-forward Grafana** (in a separate terminal): `./dist/perfman portforward -g`. The UI is at **http://localhost:3000** (default login: `admin` / `admin`).
-3. **Use the dashboard**: With Prometheus also port-forwarded (`./dist/perfman portforward -p`), open Grafana and use the dropdowns at the top to pick **namespace**, **pipeline**, and **vertex**. The dashboard shows throughput, latency, and other Numaflow metrics from Prometheus.
-4. **Share a snapshot**: Run `./dist/perfman snapshot`. It creates a Prometheus data source in Grafana, uploads the perfman dashboard template, and generates a **snapshot URL**. Open that URL (on the same Grafana instance) to view a frozen view of the dashboard. For the snapshot to show data, set the dashboard time range to **absolute** (e.g. the run window) before running snapshot, or open the snapshot URL soon after creating it so the relative time range still has data.
+
+**Usage:**
+
+```bash
+# Import a dashboard (live dashboard in Grafana; prints the dashboard URL)
+./dist/perfman dashboard [--template pipeline | --template-path <path>]
+
+# Create a snapshot (frozen, shareable link; prints the snapshot URL)
+./dist/perfman dashboard --snapshot [--template pipeline | --template-path <path>]
+```
+
+**Options:**
+
+| Option            | Description                                                                 |
+|-------------------|-----------------------------------------------------------------------------|
+| `-t pipeline`     | Use the built-in pipeline metrics dashboard (default).                      |
+| `--template-path` | Path to a dashboard JSON file (overrides `--template`). Use for MonoVertex or custom templates kept outside this repo. |
+| `--snapshot`      | Create a snapshot and print the snapshot URL instead of the live dashboard URL. |
+
+**Examples:**
+
+- Import the pipeline dashboard:  
+  `./dist/perfman dashboard` or `./dist/perfman dashboard -t pipeline`
+
+- Import a dashboard from your own file (e.g. MonoVertex):  
+  `./dist/perfman dashboard --template-path /path/to/dashboard-monovertex-template.json`
+
+- Create a shareable snapshot of the pipeline dashboard:  
+  `./dist/perfman dashboard -t pipeline --snapshot`
+
+- Create a snapshot from a custom template:  
+  `./dist/perfman dashboard --template-path ./my-dashboard.json --snapshot`

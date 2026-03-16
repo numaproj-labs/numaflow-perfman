@@ -1,0 +1,25 @@
+# PodMonitor so Prometheus (kube-prometheus-stack) scrapes MonoVertex pod metrics.
+# Deploy to the same namespace as perfman so the release label is selected.
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  labels:
+    app.kubernetes.io/part-of: perfman
+    release: perfman-kube-prometheus
+  name: perfman-numaflow-monovertex-metrics
+spec:
+  podMetricsEndpoints:
+    - path: /metrics
+      port: metrics
+      interval: 15s
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: mono-vertex
+      app.kubernetes.io/managed-by: mono-vertex-controller
+      app.kubernetes.io/part-of: numaflow
+    matchExpressions:
+      - key: numaflow.numaproj.io/mono-vertex-name
+        operator: Exists
