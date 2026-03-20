@@ -9,12 +9,19 @@ metadata:
   name: perfman-numaflow-monovertex-metrics
 spec:
   podMetricsEndpoints:
+    # MonoVertex pods run several containers (udsource, transformer, udf, udsink, …), each possibly
+    # exposing port "metrics" → duplicate series per pod. Keep only CtrMain ("numa") targets.
+    # Use relabelings (not spec.container) for older prometheus-operator CRDs that reject `container`.
     - path: /metrics
       port: metrics
       interval: 15s
       scheme: https
       tlsConfig:
         insecureSkipVerify: true
+      relabelings:
+        - action: keep
+          sourceLabels: [__meta_kubernetes_pod_container_name]
+          regex: numa
   selector:
     matchLabels:
       app.kubernetes.io/component: mono-vertex
