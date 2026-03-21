@@ -22,6 +22,12 @@ var svGvr = schema.GroupVersionResource{
 	Resource: "servicemonitors",
 }
 
+var pmGvr = schema.GroupVersionResource{
+	Group:    "monitoring.coreos.com",
+	Version:  "v1",
+	Resource: "podmonitors",
+}
+
 var isbGvr = schema.GroupVersionResource{
 	Group:    "numaflow.numaproj.io",
 	Version:  "v1alpha1",
@@ -100,11 +106,11 @@ var setupCmd = &cobra.Command{
 		}
 
 		// Install metrics service monitors
-		if err := util.CreateResource("./config/numaflow/pipeline-metrics.yaml", dynamicClient, svGvr, util.PerfmanNamespace, log); err != nil {
-			return fmt.Errorf("failed to create service monitor for pipeline metrics: %w", err)
+		if err := util.CreateResource("./config/numaflow/pipeline-metrics.yaml", dynamicClient, pmGvr, util.PerfmanNamespace, log); err != nil {
+			return fmt.Errorf("failed to create pod monitor for pipeline metrics: %w", err)
 		}
-		if err := util.CreateResource("./config/numaflow/monovertex-metrics.yaml", dynamicClient, svGvr, util.PerfmanNamespace, log); err != nil {
-			return fmt.Errorf("failed to create service monitor for monovertex metrics: %w", err)
+		if err := util.CreateResource("./config/numaflow/monovertex-metrics.yaml", dynamicClient, pmGvr, util.PerfmanNamespace, log); err != nil {
+			return fmt.Errorf("failed to create pod monitor for monovertex metrics: %w", err)
 		}
 		if err := util.CreateResource("./config/numaflow/isbvc-jetstream-metrics.yaml", dynamicClient, svGvr, util.PerfmanNamespace, log); err != nil {
 			return fmt.Errorf("failed to create service monitor for jetstream metrics: %w", err)
