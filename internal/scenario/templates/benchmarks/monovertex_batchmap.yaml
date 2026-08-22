@@ -1,0 +1,66 @@
+apiVersion: numaflow.numaproj.io/v1alpha1
+kind: MonoVertex
+metadata:
+  name: {{.Name}}
+  namespace: {{.Namespace}}
+  labels:
+    perfman.numaproj.io/managed-by: numaflow-perfman
+    perfman.numaproj.io/scenario: {{.ScenarioID | yamlQuote}}
+{{- if .RunID}}
+    perfman.numaproj.io/run-id: {{.RunID | yamlQuote}}
+{{- end}}
+{{- if .NumaflowImageDigest}}
+    perfman.numaproj.io/numaflow-image: {{.NumaflowImageDigest | yamlQuote}}
+  annotations:
+    perfman.numaproj.io/numaflow-image-ref: {{.NumaflowImageRef}}
+{{- end}}
+spec:
+  metadata:
+    labels:
+      perfman.numaproj.io/managed-by: numaflow-perfman
+      perfman.numaproj.io/scenario: {{.ScenarioID | yamlQuote}}
+{{- if .RunID}}
+      perfman.numaproj.io/run-id: {{.RunID | yamlQuote}}
+{{- end}}
+{{- if .NumaflowImageDigest}}
+      perfman.numaproj.io/numaflow-image: {{.NumaflowImageDigest | yamlQuote}}
+{{- end}}
+  scale:
+    min: 1
+    max: 1
+  containerTemplate:
+    resources:
+      requests:
+        cpu: 1
+        memory: 500Mi
+      limits:
+        cpu: 1
+        memory: 500Mi
+  source:
+    generator:
+      rpu: 5000
+      duration: 1s
+  udf:
+    container:
+      image: {{.UDFImage}}
+      imagePullPolicy: Never
+      resources:
+        requests:
+          cpu: 1
+          memory: 500Mi
+        limits:
+          cpu: 1
+          memory: 500Mi
+      args:
+        - "--benchmark-batchmap"
+  sink:
+    udsink:
+      container:
+        image: {{.UDFImage}}
+        imagePullPolicy: Never
+        resources:
+          requests:
+            cpu: 300m
+            memory: 500Mi
+        args:
+          - "--benchmark-blackhole-sink"

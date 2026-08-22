@@ -1,3 +1,7 @@
-dist/
-.idea/*
-output/
+/bin/
+*.db
+*.db-wal
+*.db-shm
+*.db.backup-*
+coverage.out
+/results/

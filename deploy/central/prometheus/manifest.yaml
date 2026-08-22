@@ -1,0 +1,183 @@
+{
+  "apiVersion": "v1",
+  "kind": "ServiceAccount",
+  "metadata": {
+    "name": "prometheus",
+    "namespace": "monitoring"
+  }
+}
+---
+{
+  "apiVersion": "rbac.authorization.k8s.io/v1",
+  "kind": "ClusterRole",
+  "metadata": {
+    "name": "prometheus"
+  },
+  "rules": [
+    {
+      "apiGroups": [
+        ""
+      ],
+      "resources": [
+        "nodes",
+        "nodes/metrics",
+        "nodes/proxy",
+        "services",
+        "endpoints",
+        "pods"
+      ],
+      "verbs": [
+        "get",
+        "list",
+        "watch"
+      ]
+    },
+    {
+      "nonResourceURLs": [
+        "/metrics",
+        "/metrics/cadvisor"
+      ],
+      "verbs": [
+        "get"
+      ]
+    }
+  ]
+}
+---
+{
+  "apiVersion": "rbac.authorization.k8s.io/v1",
+  "kind": "ClusterRoleBinding",
+  "metadata": {
+    "name": "prometheus"
+  },
+  "roleRef": {
+    "apiGroup": "rbac.authorization.k8s.io",
+    "kind": "ClusterRole",
+    "name": "prometheus"
+  },
+  "subjects": [
+    {
+      "kind": "ServiceAccount",
+      "name": "prometheus",
+      "namespace": "monitoring"
+    }
+  ]
+}
+---
+{
+  "apiVersion": "v1",
+  "data": {
+    "prometheus.yml": "global:\n  scrape_interval: 10s\nscrape_configs:\n  - job_name: cadvisor\n    scheme: https\n    tls_config:\n      insecure_skip_verify: true\n    bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token\n    kubernetes_sd_configs:\n      - role: node\n    relabel_configs:\n      - action: labelmap\n        regex: __meta_kubernetes_node_label_(.+)\n      - target_label: __address__\n        replacement: kubernetes.default.svc:443\n      - source_labels: [__meta_kubernetes_node_name]\n        regex: (.+)\n        target_label: __metrics_path__\n        replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor\n  - job_name: numaflow-pods\n    scheme: https\n    tls_config:\n      insecure_skip_verify: true\n    kubernetes_sd_configs:\n      - role: pod\n    relabel_configs:\n      - source_labels: [__meta_kubernetes_pod_label_numaflow_numaproj_io_pipeline_name, __meta_kubernetes_pod_label_numaflow_numaproj_io_mono_vertex_name]\n        regex: (.+)|(.+)\n        action: keep\n      - source_labels: [__meta_kubernetes_pod_container_port_name]\n        regex: metrics\n        action: keep\n      - source_labels: [__meta_kubernetes_pod_name]\n        target_label: pod\n"
+  },
+  "kind": "ConfigMap",
+  "metadata": {
+    "name": "prometheus-config",
+    "namespace": "monitoring"
+  }
+}
+---
+{
+  "apiVersion": "v1",
+  "kind": "PersistentVolumeClaim",
+  "metadata": {
+    "name": "prometheus-data",
+    "namespace": "monitoring"
+  },
+  "spec": {
+    "accessModes": [
+      "ReadWriteOnce"
+    ],
+    "resources": {
+      "requests": {
+        "storage": "10Gi"
+      }
+    }
+  }
+}
+---
+{
+  "apiVersion": "apps/v1",
+  "kind": "Deployment",
+  "metadata": {
+    "name": "prometheus",
+    "namespace": "monitoring"
+  },
+  "spec": {
+    "replicas": 1,
+    "selector": {
+      "matchLabels": {
+        "app": "prometheus"
+      }
+    },
+    "template": {
+      "metadata": {
+        "labels": {
+          "app": "prometheus"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "args": [
+              "--config.file=/etc/prometheus/prometheus.yml",
+              "--storage.tsdb.path=/prometheus"
+            ],
+            "image": "prom/prometheus:v2.54.1",
+            "name": "prometheus",
+            "ports": [
+              {
+                "containerPort": 9090
+              }
+            ],
+            "volumeMounts": [
+              {
+                "mountPath": "/etc/prometheus",
+                "name": "config"
+              },
+              {
+                "mountPath": "/prometheus",
+                "name": "data"
+              }
+            ]
+          }
+        ],
+        "serviceAccountName": "prometheus",
+        "volumes": [
+          {
+            "configMap": {
+              "name": "prometheus-config"
+            },
+            "name": "config"
+          },
+          {
+            "name": "data",
+            "persistentVolumeClaim": {
+              "claimName": "prometheus-data"
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+---
+{
+  "apiVersion": "v1",
+  "kind": "Service",
+  "metadata": {
+    "name": "prometheus",
+    "namespace": "monitoring"
+  },
+  "spec": {
+    "ports": [
+      {
+        "port": 9090,
+        "targetPort": 9090
+      }
+    ],
+    "selector": {
+      "app": "prometheus"
+    },
+    "type": "ClusterIP"
+  }
+}

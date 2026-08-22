@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>perfman — benchmarks</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>perfman</h1>
+    <nav class="tabs" aria-label="Primary">
+      <button type="button" class="tab active" data-view="reports">Reports</button>
+      <button type="button" class="tab" data-view="run">Run benchmark</button>
+      <button type="button" class="tab" data-view="validation">Run validation</button>
+      <button type="button" class="tab" data-view="history">Run history</button>
+    </nav>
+  </header>
+
+  <section id="view-reports" class="view">
+    <header class="toolbar">
+      <label class="field">
+        <span>Benchmark</span>
+        <select id="benchmark" aria-label="Benchmark scenario"></select>
+      </label>
+      <label class="field">
+        <span>Baseline</span>
+        <select id="baseline" aria-label="Baseline run"></select>
+      </label>
+      <label class="field">
+        <span>Candidate</span>
+        <select id="candidate" aria-label="Candidate run">
+          <option value="">— select —</option>
+        </select>
+      </label>
+    </header>
+    <main class="panel">
+      <div id="status" class="status" aria-live="polite"></div>
+      <iframe id="report" title="Benchmark report" class="report-frame" sandbox="allow-scripts allow-same-origin"></iframe>
+    </main>
+  </section>
+
+  <section id="view-run" class="view hidden">
+    <main class="panel">
+      <div class="run-form-col">
+        <h2>Run benchmark</h2>
+        <p class="muted">Start one benchmark against the configured cluster. Progress streams here while the run executes.</p>
+
+        <div id="run-preflight-banner" class="banner" hidden></div>
+        <div id="run-error" class="banner error" hidden></div>
+
+        <div id="run-form">
+          <div class="grid-2">
+            <label class="field grow">
+              <span>Scenario *</span>
+              <select id="run-scenario" aria-label="Scenario"></select>
+            </label>
+            <label class="field grow">
+              <span>Duration *</span>
+              <input id="run-duration" type="text" value="15m" placeholder="15m" aria-label="Duration">
+            </label>
+          </div>
+          <label class="field grow">
+            <span>Numaflow image *</span>
+            <input id="run-image" type="text" placeholder="quay.io/numaproj/numaflow:v1.8.2" aria-label="Numaflow image">
+          </label>
+
+          <div class="actions">
+            <button type="button" class="btn primary" id="run-start">Start benchmark</button>
+            <button type="button" class="btn secondary" id="run-preflight">Run preflight</button>
+          </div>
+          <pre id="run-cli" class="cli" aria-label="CLI equivalent"></pre>
+        </div>
+
+        <div id="run-live" class="hidden">
+          <div class="row between">
+            <div>
+              <h2 id="live-title">Live run</h2>
+              <p id="live-subtitle" class="muted"></p>
+            </div>
+            <button type="button" class="btn danger" id="run-cancel">Cancel run</button>
+          </div>
+          <ol id="phase-rail" class="phase-rail"></ol>
+          <div class="grid-3 stats">
+            <div class="stat"><div class="stat-value" id="live-status">—</div><div class="stat-label">Status</div></div>
+            <div class="stat"><div class="stat-value" id="live-namespace">—</div><div class="stat-label">Namespace</div></div>
+            <div class="stat"><div class="stat-value" id="live-elapsed">—</div><div class="stat-label">Elapsed</div></div>
+          </div>
+          <div class="log-panel" id="live-log" aria-live="polite"></div>
+        </div>
+
+        <div id="run-done" class="hidden">
+          <div class="row between">
+            <div>
+              <h2 id="done-title">Benchmark finished</h2>
+              <p id="done-subtitle" class="muted"></p>
+            </div>
+            <div class="actions">
+              <button type="button" class="btn primary" id="done-view-report">View report</button>
+              <button type="button" class="btn secondary" id="done-new-run">New run</button>
+            </div>
+          </div>
+          <div id="done-summary" class="banner"></div>
+        </div>
+      </div>
+    </main>
+  </section>
+
+  <section id="view-validation" class="view hidden">
+    <main class="panel">
+      <div class="run-form-col">
+        <h2>Run validation</h2>
+        <p class="muted">Start one data validation against the configured cluster. Each validation stores correctness counts and failure samples.</p>
+
+        <div id="validation-banner" class="banner" hidden></div>
+        <div id="validation-error" class="banner error" hidden></div>
+
+        <div id="validation-form">
+          <div class="grid-2">
+            <label class="field grow">
+              <span>Scenario *</span>
+              <select id="validation-scenario" aria-label="Validation scenario"></select>
+            </label>
+            <label class="field grow">
+              <span>Tier</span>
+              <select id="validation-tier" aria-label="Validation tier">
+                <option value="smoke">smoke</option>
+                <option value="standard" selected>standard</option>
+                <option value="soak">soak</option>
+              </select>
+            </label>
+          </div>
+          <label class="field grow">
+            <span>Numaflow image *</span>
+            <input id="validation-image" type="text" placeholder="quay.io/numaproj/numaflow:v1.8.2" aria-label="Validation Numaflow image">
+          </label>
+          <div class="grid-2">
+            <label class="field grow">
+              <span>Events</span>
+              <input id="validation-events" type="number" min="0" step="1" placeholder="tier default" aria-label="Validation events">
+            </label>
+            <label class="field grow">
+              <span>Timeout</span>
+              <input id="validation-timeout" type="text" value="90m" placeholder="90m" aria-label="Validation timeout">
+            </label>
+          </div>
+          <div class="grid-2">
+            <label class="field grow">
+              <span>Seed</span>
+              <input id="validation-seed" type="number" min="0" step="1" placeholder="generated when empty" aria-label="Validation seed">
+            </label>
+            <label class="field grow">
+              <span>Base event time</span>
+              <input id="validation-base-event-time" type="text" placeholder="2026-08-03T00:00:00Z" aria-label="Validation base event time">
+            </label>
+          </div>
+          <label class="row">
+            <span class="switch">
+              <input id="validation-dump-failure-db" type="checkbox" aria-label="Dump failure database">
+              <span></span>
+            </span>
+            <span>
+              <span class="label">Dump failure database</span>
+              <span class="hint">Writes a pg_dump artifact if the validation fails.</span>
+            </span>
+          </label>
+
+          <div class="actions">
+            <button type="button" class="btn primary" id="validation-start">Start validation</button>
+            <button type="button" class="btn secondary" id="validation-refresh">Refresh history</button>
+          </div>
+          <pre id="validation-cli" class="cli" aria-label="Validation CLI equivalent"></pre>
+        </div>
+
+        <div id="validation-live" class="hidden">
+          <div class="row between">
+            <div>
+              <h2 id="validation-live-title">Live validation</h2>
+              <p id="validation-live-subtitle" class="muted"></p>
+            </div>
+            <button type="button" class="btn danger" id="validation-cancel">Cancel validation</button>
+          </div>
+          <ol id="validation-phase-rail" class="phase-rail"></ol>
+          <div class="grid-3 stats">
+            <div class="stat"><div class="stat-value" id="validation-live-status">—</div><div class="stat-label">Status</div></div>
+            <div class="stat"><div class="stat-value" id="validation-live-namespace">—</div><div class="stat-label">Namespace</div></div>
+            <div class="stat"><div class="stat-value" id="validation-live-elapsed">—</div><div class="stat-label">Elapsed</div></div>
+          </div>
+          <div class="log-panel" id="validation-live-log" aria-live="polite"></div>
+        </div>
+
+        <div id="validation-done" class="hidden">
+          <div class="row between">
+            <div>
+              <h2 id="validation-done-title">Validation finished</h2>
+              <p id="validation-done-subtitle" class="muted"></p>
+            </div>
+            <div class="actions">
+              <button type="button" class="btn secondary" id="validation-new-run">New validation</button>
+            </div>
+          </div>
+          <div id="validation-done-summary" class="banner"></div>
+          <div id="validation-details" class="validation-details"></div>
+        </div>
+
+        <section class="section-block">
+          <div class="row between">
+            <div>
+              <h2>Validation history</h2>
+              <p id="validation-history-msg" class="muted" aria-live="polite"></p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="history-table" id="validation-history-table">
+              <thead>
+                <tr>
+                  <th>Created</th>
+                  <th>Scenario</th>
+                  <th>Image</th>
+                  <th>Status</th>
+                  <th>Namespace</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </section>
+
+  <section id="view-history" class="view hidden">
+    <main class="panel">
+      <header class="toolbar">
+        <label class="field">
+          <span>Scenario</span>
+          <select id="history-scenario" aria-label="History scenario">
+            <option value="">All scenarios</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Status</span>
+          <select id="history-status" aria-label="History status">
+            <option value="">All statuses</option>
+            <option value="completed">completed</option>
+            <option value="failed">failed</option>
+            <option value="interrupted">interrupted</option>
+            <option value="measuring">measuring</option>
+            <option value="collecting">collecting</option>
+            <option value="created">created</option>
+            <option value="preflight">preflight</option>
+          </select>
+        </label>
+        <button type="button" class="btn secondary" id="history-refresh">Refresh</button>
+      </header>
+      <div id="history-status-msg" class="status" aria-live="polite"></div>
+      <div class="table-wrap">
+        <table class="history-table" id="history-table">
+          <thead>
+            <tr>
+              <th>Created</th>
+              <th>Scenario</th>
+              <th>Image</th>
+              <th>Status</th>
+              <th>Namespace</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </main>
+  </section>
+
+  <dialog id="overwrite-dialog">
+    <form method="dialog" class="dialog-body">
+      <h3>Overwrite existing result?</h3>
+      <p id="overwrite-message" class="muted"></p>
+      <div class="actions">
+        <button value="cancel" class="btn secondary">Cancel</button>
+        <button value="confirm" class="btn primary">Overwrite and start</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="/static/app.js"></script>
+  <script src="/static/validation.js"></script>
+</body>
+</html>
