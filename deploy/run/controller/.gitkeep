@@ -1,0 +1,2 @@
+# Namespace-scoped Numaflow controller manifests are rendered at runtime.
+# See internal/controller.Render and deploy/run/controller/render_test.go.

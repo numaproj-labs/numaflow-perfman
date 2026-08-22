@@ -1,0 +1,21 @@
+# Kind cluster config for perfman local development.
+# Used by perfman setup --create-cluster (internal/setup).
+#
+# Static CPU Manager reserves CPU 0 for the system; kubeReserved reduces
+# scheduler-visible allocatable CPU by the same amount.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+
+kubeadmConfigPatches:
+- |
+  apiVersion: kubelet.config.k8s.io/v1beta1
+  kind: KubeletConfiguration
+  cpuManagerPolicy: static
+  kubeReserved:
+    cpu: "1"
+  reservedSystemCPUs: "0"
+  cpuManagerPolicyOptions:
+    strict-cpu-reservation: "true"
+
+nodes:
+- role: control-plane

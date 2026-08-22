@@ -1,0 +1,157 @@
+{
+  "apiVersion": "v1",
+  "kind": "Secret",
+  "metadata": {
+    "name": "data-validation-postgres-credentials",
+    "namespace": "validation-system"
+  },
+  "stringData": {
+    "POSTGRES_DB": "postgres",
+    "POSTGRES_PASSWORD": "numaflow",
+    "POSTGRES_USER": "numaflow"
+  },
+  "type": "Opaque"
+}
+---
+{
+  "apiVersion": "v1",
+  "kind": "Service",
+  "metadata": {
+    "name": "data-validation-postgres",
+    "namespace": "validation-system"
+  },
+  "spec": {
+    "ports": [
+      {
+        "port": 5432,
+        "targetPort": 5432
+      }
+    ],
+    "selector": {
+      "app": "data-validation-postgres"
+    },
+    "type": "ClusterIP"
+  }
+}
+---
+{
+  "apiVersion": "apps/v1",
+  "kind": "StatefulSet",
+  "metadata": {
+    "name": "data-validation-postgres",
+    "namespace": "validation-system"
+  },
+  "spec": {
+    "replicas": 1,
+    "selector": {
+      "matchLabels": {
+        "app": "data-validation-postgres"
+      }
+    },
+    "serviceName": "data-validation-postgres",
+    "template": {
+      "metadata": {
+        "labels": {
+          "app": "data-validation-postgres"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "env": [
+              {
+                "name": "POSTGRES_USER",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "POSTGRES_USER",
+                    "name": "data-validation-postgres-credentials"
+                  }
+                }
+              },
+              {
+                "name": "POSTGRES_PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "POSTGRES_PASSWORD",
+                    "name": "data-validation-postgres-credentials"
+                  }
+                }
+              },
+              {
+                "name": "POSTGRES_DB",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "POSTGRES_DB",
+                    "name": "data-validation-postgres-credentials"
+                  }
+                }
+              },
+              {
+                "name": "PGDATA",
+                "value": "/var/lib/postgresql/data/pgdata"
+              }
+            ],
+            "image": "postgres:18",
+            "livenessProbe": {
+              "exec": {
+                "command": [
+                  "pg_isready",
+                  "-U",
+                  "numaflow"
+                ]
+              },
+              "initialDelaySeconds": 30,
+              "periodSeconds": 10
+            },
+            "name": "postgres",
+            "ports": [
+              {
+                "containerPort": 5432
+              }
+            ],
+            "readinessProbe": {
+              "exec": {
+                "command": [
+                  "pg_isready",
+                  "-U",
+                  "numaflow"
+                ]
+              },
+              "initialDelaySeconds": 5,
+              "periodSeconds": 5
+            },
+            "resources": {
+              "requests": {
+                "cpu": "250m",
+                "memory": "1Gi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/var/lib/postgresql/data",
+                "name": "pg-data"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "volumeClaimTemplates": [
+      {
+        "metadata": {
+          "name": "pg-data"
+        },
+        "spec": {
+          "accessModes": [
+            "ReadWriteOnce"
+          ],
+          "resources": {
+            "requests": {
+              "storage": "5Gi"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

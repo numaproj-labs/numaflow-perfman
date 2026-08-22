@@ -1,0 +1,147 @@
+apiVersion: numaflow.numaproj.io/v1alpha1
+kind: Pipeline
+metadata:
+  name: {{.Name}}
+  namespace: {{.Namespace}}
+  labels:
+    perfman.numaproj.io/managed-by: numaflow-perfman
+    perfman.numaproj.io/scenario: {{.ScenarioID | yamlQuote}}
+{{- if .RunID}}
+    perfman.numaproj.io/run-id: {{.RunID | yamlQuote}}
+{{- end}}
+{{- if .NumaflowImageDigest}}
+    perfman.numaproj.io/numaflow-image: {{.NumaflowImageDigest | yamlQuote}}
+  annotations:
+    perfman.numaproj.io/numaflow-image-ref: {{.NumaflowImageRef}}
+{{- end}}
+spec:
+  interStepBufferServiceName: {{.Name}}
+  vertices:
+    - name: in
+      metadata:
+        labels:
+          perfman.numaproj.io/managed-by: numaflow-perfman
+          perfman.numaproj.io/scenario: {{.ScenarioID | yamlQuote}}
+{{- if .RunID}}
+          perfman.numaproj.io/run-id: {{.RunID | yamlQuote}}
+{{- end}}
+{{- if .NumaflowImageDigest}}
+          perfman.numaproj.io/numaflow-image: {{.NumaflowImageDigest | yamlQuote}}
+{{- end}}
+      scale:
+        min: 1
+        max: 1
+      containerTemplate:
+        resources:
+          requests:
+            cpu: 500m
+            memory: 500Mi
+          limits:
+            cpu: 500m
+            memory: 500Mi
+      source:
+        generator:
+          rpu: 18000
+          duration: 1s
+          msgSize: 1024
+    - name: map
+      metadata:
+        labels:
+          perfman.numaproj.io/managed-by: numaflow-perfman
+          perfman.numaproj.io/scenario: {{.ScenarioID | yamlQuote}}
+{{- if .RunID}}
+          perfman.numaproj.io/run-id: {{.RunID | yamlQuote}}
+{{- end}}
+{{- if .NumaflowImageDigest}}
+          perfman.numaproj.io/numaflow-image: {{.NumaflowImageDigest | yamlQuote}}
+{{- end}}
+      scale:
+        min: 1
+        max: 1
+      containerTemplate:
+        resources:
+          requests:
+            cpu: 500m
+            memory: 500Mi
+          limits:
+            cpu: 500m
+            memory: 500Mi
+      udf:
+        container:
+          image: {{.UDFImage}}
+          imagePullPolicy: Never
+          resources:
+            requests:
+              cpu: 1
+              memory: 500Mi
+            limits:
+              cpu: 1
+              memory: 500Mi
+          args:
+            - "--benchmark-map"
+    - name: map2
+      metadata:
+        labels:
+          perfman.numaproj.io/managed-by: numaflow-perfman
+          perfman.numaproj.io/scenario: {{.ScenarioID | yamlQuote}}
+{{- if .RunID}}
+          perfman.numaproj.io/run-id: {{.RunID | yamlQuote}}
+{{- end}}
+{{- if .NumaflowImageDigest}}
+          perfman.numaproj.io/numaflow-image: {{.NumaflowImageDigest | yamlQuote}}
+{{- end}}
+      scale:
+        min: 1
+        max: 1
+      containerTemplate:
+        resources:
+          requests:
+            cpu: 500m
+            memory: 500Mi
+          limits:
+            cpu: 500m
+            memory: 500Mi
+      udf:
+        container:
+          image: {{.UDFImage}}
+          imagePullPolicy: Never
+          resources:
+            requests:
+              cpu: 1
+              memory: 500Mi
+            limits:
+              cpu: 1
+              memory: 500Mi
+          args:
+            - "--benchmark-map"
+    - name: out
+      metadata:
+        labels:
+          perfman.numaproj.io/managed-by: numaflow-perfman
+          perfman.numaproj.io/scenario: {{.ScenarioID | yamlQuote}}
+{{- if .RunID}}
+          perfman.numaproj.io/run-id: {{.RunID | yamlQuote}}
+{{- end}}
+{{- if .NumaflowImageDigest}}
+          perfman.numaproj.io/numaflow-image: {{.NumaflowImageDigest | yamlQuote}}
+{{- end}}
+      scale:
+        min: 1
+        max: 1
+      containerTemplate:
+        resources:
+          requests:
+            cpu: 500m
+            memory: 500Mi
+          limits:
+            cpu: 500m
+            memory: 500Mi
+      sink:
+        blackhole: {}
+  edges:
+    - from: in
+      to: map
+    - from: map
+      to: map2
+    - from: map2
+      to: out

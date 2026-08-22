@@ -1,0 +1,1 @@
+- If you need to update the database schema, never create a migration schema for the tables. Update the schema in-place assuming the db is deleted and recreated.
